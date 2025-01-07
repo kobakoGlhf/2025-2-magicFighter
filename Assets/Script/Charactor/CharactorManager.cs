@@ -35,7 +35,6 @@ namespace MFFrameWork.Charactor
         private void FixedUpdate()
         {
             var moveInput = _playerInput.actions["Move"].ReadValue<Vector2>();
-            if(moveInput.sqrMagnitude!=0)
             _move.Move(moveInput);
         }
         //void OnMove(InputValue value)

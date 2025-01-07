@@ -24,9 +24,9 @@ namespace MFFrameWork.Charactor
             Ray downRay = new Ray(gameObject.transform.position, Vector3.down);
             Physics.Raycast(downRay, out RaycastHit hit, maxDistance);
 
-
+            vector = vector.normalized * _speed;
             var horizontalRotaion = Quaternion.AngleAxis(_referenceObj.transform.eulerAngles.y, Vector3.up);
-            _rb.linearVelocity = horizontalRotaion * new Vector3(vector.x, _rb.linearVelocity.y, vector.y).normalized * _speed;
+            _rb.linearVelocity = horizontalRotaion * new Vector3(vector.x, _rb.linearVelocity.y, vector.y);
         }
         public virtual void Jump()
         {
