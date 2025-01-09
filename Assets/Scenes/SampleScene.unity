@@ -153,10 +153,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _speed: 10
-  _jumpPower: 50
+  _jumpPower: 250
   _referenceObj: {fileID: 330585543}
   _rb: {fileID: 0}
-  maxDistance: 0
+  _maxDistance: 1
 --- !u!54 &320751442
 Rigidbody:
   m_ObjectHideFlags: 0

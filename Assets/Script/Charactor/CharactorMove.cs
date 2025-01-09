@@ -11,8 +11,8 @@ namespace MFFrameWork.Charactor
         [SerializeField] float _speed;
         [SerializeField] float _jumpPower;
         [SerializeField] GameObject _referenceObj;
-        [SerializeField] Rigidbody _rb;
-        [SerializeField] float maxDistance;
+        Rigidbody _rb;
+        [SerializeField] float _maxDistance;
         bool _isGround;
         public virtual void Init() { }
         public void SetReferencePoint()
@@ -22,11 +22,13 @@ namespace MFFrameWork.Charactor
         public virtual void Move(Vector2 vector)
         {
             Ray downRay = new Ray(gameObject.transform.position, Vector3.down);
-            Physics.Raycast(downRay, out RaycastHit hit, maxDistance);
+            Physics.Raycast(downRay, out RaycastHit hit, _maxDistance);
+            var groundParallelNormal = Vector3.Cross(Vector3.Cross(hit.normal, Vector3.up), hit.normal).normalized;
+            Debug.Log(groundParallelNormal);
 
             vector = vector.normalized * _speed;
             var horizontalRotaion = Quaternion.AngleAxis(_referenceObj.transform.eulerAngles.y, Vector3.up);
-            _rb.linearVelocity = horizontalRotaion * new Vector3(vector.x, _rb.linearVelocity.y, vector.y);
+            _rb.linearVelocity = horizontalRotaion * new Vector3(vector.x,0,vector.y) + new Vector3(0, _rb.linearVelocity.y, 0);
         }
         public virtual void Jump()
         {

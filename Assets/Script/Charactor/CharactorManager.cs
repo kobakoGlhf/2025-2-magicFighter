@@ -14,7 +14,7 @@ namespace MFFrameWork.Charactor
         PlayerInput _playerInput;
         CharactorStats _stats;
 
-        Action MoveAction;
+        Action<Vector2> MoveAction;
         Action Attack;
         Action Fire1;
         Action Fire2;
@@ -31,11 +31,12 @@ namespace MFFrameWork.Charactor
             _playerInput.ActivateInput();
             if ((_charactorData == null).ChackLog("CharactorData is null"))
                 _stats = new CharactorStats();
+            MoveAction += x => _move.Move(x);
         }
         private void FixedUpdate()
         {
             var moveInput = _playerInput.actions["Move"].ReadValue<Vector2>();
-            _move.Move(moveInput);
+            MoveAction?.Invoke(moveInput);
         }
         //void OnMove(InputValue value)
         //{
