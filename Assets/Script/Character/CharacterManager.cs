@@ -3,7 +3,7 @@ using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
-namespace MFFrameWork.Charactor
+namespace MFFrameWork.Character
 {
     [RequireComponent(typeof(Rigidbody))]
     public class CharactorManager : MonoBehaviour

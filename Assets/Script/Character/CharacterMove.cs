@@ -1,8 +1,8 @@
 using UnityEngine;
 
-namespace MFFrameWork.Charactor
+namespace MFFrameWork.Character
 {
-    public class CharactorMove : Move_B
+    public class CharacterMove : Move_B
     {
 
     }
@@ -19,16 +19,18 @@ namespace MFFrameWork.Charactor
         {
 
         }
-        public virtual void Move(Vector2 vector)
+        public virtual void Move(Vector2 input)
         {
-            Ray downRay = new Ray(gameObject.transform.position, Vector3.down);
-            Physics.Raycast(downRay, out RaycastHit hit, _maxDistance);
-            var groundParallelNormal = Vector3.Cross(Vector3.Cross(hit.normal, Vector3.up), hit.normal).normalized;
-            Debug.Log(groundParallelNormal);
-
-            vector = vector.normalized * _speed;
+            Vector3 objFoward = new Vector3(_referenceObj.transform.forward.x, 0, _referenceObj.transform.forward.z);
+            Vector3 inputVector3 = new Vector3(input.x, 0, input.y).normalized;
             var horizontalRotaion = Quaternion.AngleAxis(_referenceObj.transform.eulerAngles.y, Vector3.up);
-            _rb.linearVelocity = horizontalRotaion * new Vector3(vector.x,0,vector.y) + new Vector3(0, _rb.linearVelocity.y, 0);
+            var moveVector = (horizontalRotaion * inputVector3);
+
+            Physics.Raycast(new Ray(gameObject.transform.position, Vector3.down), out RaycastHit hit, _maxDistance);
+            var groundParallel = Vector3.Cross(Vector3.Cross(hit.normal, transform.forward), hit.normal).normalized;
+
+            var moveRotation = Quaternion.FromToRotation(objFoward, groundParallel);
+            _rb.linearVelocity = moveRotation * inputVector3 * _speed;
         }
         public virtual void Jump()
         {
@@ -39,6 +41,8 @@ namespace MFFrameWork.Charactor
         {
             Debug.Log("Dush!!");
         }
+
+        
         public void SetRigidbody(Rigidbody rb) => _rb = rb;
         public void SetSpeed(float speed) => _speed = speed;
         public void SetJumpPower(float jumpPower) => _jumpPower = jumpPower;

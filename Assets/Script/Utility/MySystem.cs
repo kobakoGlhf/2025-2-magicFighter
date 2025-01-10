@@ -13,6 +13,7 @@ namespace MFFrameWork.Utilities
             return value;
         }
     }
+   
     public abstract class SingletonMonoBehaviour<T> : MonoBehaviour where T : Component
     {
         private static T instanse;
@@ -39,7 +40,12 @@ namespace MFFrameWork.Utilities
             if( instanse == null)
             {
                 instanse = this as T;
-                DontDestroyOnLoad(instanse);
+                Transform parent=instanse.transform;
+                while(parent.parent != null)
+                {
+                    parent = parent.parent;
+                }
+                DontDestroyOnLoad(parent);
             }
             else 
                 Destroy(this);
