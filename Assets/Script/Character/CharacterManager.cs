@@ -9,7 +9,7 @@ namespace MFFrameWork.Character
     public class CharactorManager : MonoBehaviour
     {
         [SerializeField] CharactorData _charactorData;
-        [SerializeField] Move_B _move;
+        [SerializeField] PlayerMove _move;
 
         PlayerInput _playerInput;
         CharactorStats _stats;
