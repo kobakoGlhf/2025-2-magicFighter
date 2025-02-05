@@ -2,11 +2,7 @@ using UnityEngine;
 
 namespace MFFrameWork.Character
 {
-    public class CharacterMove : Move_B
-    {
-
-    }
-    public abstract class Move_B : MonoBehaviour
+    public abstract class PlayerMove : MonoBehaviour
     {
         [SerializeField] float _speed;
         [SerializeField] float _jumpPower;
@@ -27,10 +23,10 @@ namespace MFFrameWork.Character
             var moveVector = (horizontalRotaion * inputVector3);
 
             Physics.Raycast(new Ray(gameObject.transform.position, Vector3.down), out RaycastHit hit, _maxDistance);
-            var groundParallel = Vector3.Cross(Vector3.Cross(hit.normal, transform.forward), hit.normal).normalized;
+            var groundParallel = Vector3.Cross(Vector3.Cross(hit.normal, objFoward), hit.normal).normalized;
 
-            var moveRotation = Quaternion.FromToRotation(objFoward, groundParallel);
-            _rb.linearVelocity = moveRotation * inputVector3 * _speed;
+            var moveRotation = Quaternion.FromToRotation(moveVector, groundParallel);
+            _rb.linearVelocity = moveRotation * objFoward * _speed;
         }
         public virtual void Jump()
         {
@@ -42,9 +38,23 @@ namespace MFFrameWork.Character
             Debug.Log("Dush!!");
         }
 
-        
+
         public void SetRigidbody(Rigidbody rb) => _rb = rb;
         public void SetSpeed(float speed) => _speed = speed;
         public void SetJumpPower(float jumpPower) => _jumpPower = jumpPower;
+    }
+    interface IMove
+    {
+        Vector2 MoveVector {  get; }
+        void Move(Vector2 moveVector);
+    }
+    interface IJump
+    {
+        float JumpPower {  get; }
+        void Jump(float jumpPower);
+    }
+    interface IDush
+    {
+        void Dush(float dushRange);
     }
 }
