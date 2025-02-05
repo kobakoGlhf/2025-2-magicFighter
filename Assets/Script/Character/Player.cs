@@ -11,26 +11,14 @@ namespace MFFrameWork
     [RequireComponent(typeof(Rigidbody), typeof(PlayerInput), typeof(CharactorMove))]
     public class Player : Charactor_B
     {
-        GameObject _camera;
         [SerializeField] float _moveSpeed;
         [SerializeField] float _groundDistanse;
         [SerializeField] float _jumpPower;
         [SerializeField] float _dushPower;
-        Rigidbody _rb;
         PlayerInput _playerInput;
-
-        ICharactorMove _playerMove;
-        IAttack _attack;
-
-
-        Vector3 _moveDirection;
-        void Start()
+        public override void Start_S()
         {
-            _rb = GetComponent<Rigidbody>();
             _playerInput = GetComponent<PlayerInput>();
-            _playerMove = GetComponent<CharactorMove>();
-            _camera = Camera.main.gameObject;
-
 
             _playerMove.OnGroundChanged += (x) => _charactorAnimation.SetBool(AnimationPropertys.IsGround, x);
 
@@ -51,33 +39,37 @@ namespace MFFrameWork
         }
 
     }
-    public class Charactor_B:MonoBehaviour, IDamageable
+    public abstract class Charactor_B:MonoBehaviour, IDamageable
     {
-        [SerializeField] ICharactorMove _playerMove;
+        [SerializeField] protected ICharactorMove _playerMove;
         protected CharactorAnimation _charactorAnimation = new();
         protected Rigidbody _rb;
         protected IAttack _attack;
-        protected Transform _originTransform;
-        bool _attackCancel;
+        [SerializeField] protected Transform _originTransform;
+        protected bool _attackCancel;
         Vector3 _moveDirection;
 
         [SerializeField] Status _status;
-        int _currentHealth = 10;
-        int AttackPower { get => _status.AttackPower; }
+        protected int _currentHealth = 10;
+        protected int AttackPower { get => _status.AttackPower; }
         private void Start()
         {
             _rb = GetComponent<Rigidbody>();
             _playerMove = GetComponent<CharactorMove>();
             _charactorAnimation.SetAnimator(GetComponent<Animator>());//ToDo:HERE　コンストラクタで代入するように変更したい
+            Start_S();
         }
+        public virtual void Start_S() { }
 
         void FixedUpdate()
         {
-            var cameraRotationY = Quaternion.Euler(0, _originTransform.transform.rotation.eulerAngles.y, 0);
-            var moveSpeed = _playerMove?.Move(cameraRotationY * _moveDirection);
-
-            _charactorAnimation.SetFloat(AnimationPropertys.MoveSpeed, moveSpeed.Value);
+            //var cameraRotationY = Quaternion.Euler(0, _originTransform.transform.rotation.eulerAngles.y, 0);
+            //var moveSpeed = _playerMove?.Move(cameraRotationY * _moveDirection);
+            var moveSpeed = _playerMove?.Move(_moveDirection);
+            if (moveSpeed is not null) _charactorAnimation.SetFloat(AnimationPropertys.MoveSpeed, moveSpeed.Value);
+            Fixed_S();
         }
+        public virtual void Fixed_S() { }
         int IDamageable.HitPoint { get => _currentHealth; }
         void IDamageable.Damage(float damage)
         {
@@ -98,7 +90,8 @@ namespace MFFrameWork
         {
             if ((_playerMove is null).ChackLog("move is null")) return;
             var moveDirection = context.ReadValue<Vector2>();
-            _moveDirection = new Vector3(moveDirection.x, 0, moveDirection.y).normalized;
+            var cameraRotationY = Quaternion.Euler(0, _originTransform.transform.rotation.eulerAngles.y, 0);
+            _moveDirection = cameraRotationY * new Vector3(moveDirection.x, 0, moveDirection.y).normalized;
         }
         protected void CancelMove(InputAction.CallbackContext context)
         {
@@ -176,77 +169,4 @@ namespace MFFrameWork
         void DeathBehavior();
     }
 
-    public class CharactorAnimation
-    {
-        static readonly Dictionary<AnimationKind, string> ClipName = new Dictionary<AnimationKind, string>()
-    {
-        {AnimationKind.Move, "Move" },
-        {AnimationKind.Jump, "Jump" },
-        {AnimationKind.Attack, "Attack" }
-    };
-        static readonly Dictionary<AnimationPropertys, string> PropertysName = new Dictionary<AnimationPropertys, string>()
-    {
-        {AnimationPropertys.MoveSpeed,"MoveSpeed" },
-        {AnimationPropertys.IsGround, "IsGround" },
-        {AnimationPropertys.AttackTrigger,"AttackTrigger" },
-        {AnimationPropertys.DamageTrigger,"DamageTrigger" },
-        {AnimationPropertys.JumpTrigger,"JumpTrigger" },
-        {AnimationPropertys.DushTrigger,"DushTrigger" },
-    };
-
-        Animator _animator;
-        public void SetAnimator(Animator animator) => _animator = animator;
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="kind"></param>
-        /// <param name="changeMod"></param>
-        /// <param name="duration">アニメーションの遷移時間。ChangeModeがCrossFadeの時のみ使用される</param>
-        public void AnimationChange(AnimationKind kind, ChangeAnimation changeMod, float duration = 1)
-        {
-            switch (changeMod)
-            {
-                case ChangeAnimation.Defalt:
-                    _animator.Play(ClipName[kind]);
-                    break;
-                case ChangeAnimation.CrossFade:
-                    _animator.CrossFade(ClipName[kind], duration);
-                    break;
-            }
-        }
-        public void SetFloat(AnimationPropertys kind, float value)
-        {
-            _animator.SetFloat(PropertysName[kind], value);
-        }
-        public void SetTrigger(AnimationPropertys kind)
-        {
-            _animator.SetTrigger(PropertysName[kind]);
-        }
-        public void SetBool(AnimationPropertys kind, bool frag)
-        {
-            _animator.SetBool(PropertysName[kind], frag);
-        }
-    }
-    public enum ChangeAnimation
-    {
-        Defalt,
-        CrossFade
-    }
-    public enum AnimationKind
-    {
-        Move,
-        Jump,
-        Attack
-    }
-    public enum AnimationPropertys
-    {
-        MoveSpeed,
-        IsGround,
-
-        AttackTrigger,
-        DamageTrigger,
-        JumpTrigger,
-        DushTrigger
-    }
 }
