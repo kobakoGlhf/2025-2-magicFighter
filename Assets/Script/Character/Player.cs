@@ -1,8 +1,6 @@
 using MFFrameWork.Utilities;
 using System;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 
 namespace MFFrameWork
@@ -11,10 +9,6 @@ namespace MFFrameWork
     [RequireComponent(typeof(Rigidbody), typeof(PlayerInput), typeof(CharactorMove))]
     public class Player : Charactor_B
     {
-        [SerializeField] float _moveSpeed;
-        [SerializeField] float _groundDistanse;
-        [SerializeField] float _jumpPower;
-        [SerializeField] float _dushPower;
         PlayerInput _playerInput;
         public override void Start_S()
         {
@@ -39,23 +33,28 @@ namespace MFFrameWork
         }
 
     }
-    public abstract class Charactor_B:MonoBehaviour, IDamageable
+    public abstract class Charactor_B : MonoBehaviour, IDamageable
     {
         [SerializeField] protected ICharactorMove _playerMove;
+        [SerializeField] protected Transform _originTransform;
+        [SerializeField] IAttack _attack;
         protected CharactorAnimation _charactorAnimation = new();
         protected Rigidbody _rb;
-        protected IAttack _attack;
-        [SerializeField] protected Transform _originTransform;
         protected bool _attackCancel;
         Vector3 _moveDirection;
 
         [SerializeField] Status _status;
         protected int _currentHealth = 10;
+        bool _isInvincible;
+
+        public Transform _targetPos;
         protected int AttackPower { get => _status.AttackPower; }
         private void Start()
         {
             _rb = GetComponent<Rigidbody>();
             _playerMove = GetComponent<CharactorMove>();
+            _attack = GetComponent<IAttack>();
+            Debug.Log(_attack);
             _charactorAnimation.SetAnimator(GetComponent<Animator>());//ToDo:HERE　コンストラクタで代入するように変更したい
             Start_S();
         }
@@ -63,15 +62,15 @@ namespace MFFrameWork
 
         void FixedUpdate()
         {
-            //var cameraRotationY = Quaternion.Euler(0, _originTransform.transform.rotation.eulerAngles.y, 0);
-            //var moveSpeed = _playerMove?.Move(cameraRotationY * _moveDirection);
-            var moveSpeed = _playerMove?.Move(_moveDirection);
+            var cameraRotationY = Quaternion.Euler(0, _originTransform.transform.rotation.eulerAngles.y, 0);
+            var moveSpeed = _playerMove?.Move(cameraRotationY * _moveDirection);
+            //var moveSpeed = _playerMove?.Move(_moveDirection);
             if (moveSpeed is not null) _charactorAnimation.SetFloat(AnimationPropertys.MoveSpeed, moveSpeed.Value);
             Fixed_S();
         }
         public virtual void Fixed_S() { }
         int IDamageable.HitPoint { get => _currentHealth; }
-        void IDamageable.Damage(float damage)
+        void IDamageable.Damage(float damage, Transform hitObjTransform)
         {
             Debug.Log($"{this} hit Damage {damage}");
         }
@@ -90,8 +89,9 @@ namespace MFFrameWork
         {
             if ((_playerMove is null).ChackLog("move is null")) return;
             var moveDirection = context.ReadValue<Vector2>();
-            var cameraRotationY = Quaternion.Euler(0, _originTransform.transform.rotation.eulerAngles.y, 0);
-            _moveDirection = cameraRotationY * new Vector3(moveDirection.x, 0, moveDirection.y).normalized;
+            //var cameraRotationY = Quaternion.Euler(0, _originTransform.transform.rotation.eulerAngles.y, 0);
+            //_moveDirection = cameraRotationY * new Vector3(moveDirection.x, 0, moveDirection.y).normalized;
+            _moveDirection = new Vector3(moveDirection.x, 0, moveDirection.y).normalized;
         }
         protected void CancelMove(InputAction.CallbackContext context)
         {
@@ -107,13 +107,14 @@ namespace MFFrameWork
         protected void OnDush(InputAction.CallbackContext context)
         {
             if ((_playerMove is null).ChackLog("dush is null")) return;
-            _playerMove.Dush(_moveDirection, () => { });
+            var cameraRotationY = Quaternion.Euler(0, _originTransform.transform.rotation.eulerAngles.y, 0);
+            _playerMove.Dush(cameraRotationY * _moveDirection, () => { });
             _charactorAnimation.SetTrigger(AnimationPropertys.DushTrigger);
         }
         protected void OnAttack(InputAction.CallbackContext context)
         {
             if ((_attack is null).ChackLog("Attack is null")) return;
-            _attack.OnAttack(AttackPower, _attackCancel);
+            _attack.OnAttack(_targetPos, AttackPower, _attackCancel);
         }
         #endregion
 
@@ -122,13 +123,16 @@ namespace MFFrameWork
     public struct Status
     {
         [SerializeField] int _maxHealth;
-        public int MaxHealth { get => _maxHealth; }
         [SerializeField] int _attackPower;
+        [SerializeField] float _invincibleTime;
+        public int MaxHealth { get => _maxHealth; }
         public int AttackPower { get => _attackPower; }
-        Status(int maxHealth, int attackPower)
+        public float InvincibleTime { get => _invincibleTime; }
+        Status(int maxHealth, int attackPower, float invincibleTime)
         {
             _maxHealth = maxHealth;
             _attackPower = attackPower;
+            _invincibleTime = invincibleTime;
         }
     }
     public interface ICharactorMove : IMove, IJump, IDush
@@ -158,15 +162,17 @@ namespace MFFrameWork
     }
     public interface IAttack
     {
-        int AttackPower { get; set; }
-        void OnAttack(float attackPower, bool cancel);
+        void OnAttack(Transform target, float attackPower, bool cancel);
     }
     public interface IDamageable
     {
         int HitPoint { get; }
         void HealthHeel(float heel);
-        void Damage(float damage);
+        void Damage(float damage, Transform hitObjTransform);
         void DeathBehavior();
     }
-
+    interface IBullet
+    {
+        void Init(Transform target, float attackPower, LayerMask dontIgnoreLayer);
+    }
 }

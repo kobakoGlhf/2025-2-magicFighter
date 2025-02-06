@@ -17,7 +17,7 @@ namespace MFFrameWork.MFSystem
         // Start is called once before the first execution of Update after the MonoBehaviour is created
         void Start()
         {
-
+            HideCursor(false);
         }
 
         // Update is called once per frame

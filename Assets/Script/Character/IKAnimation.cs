@@ -39,7 +39,6 @@ namespace MFFrameWork
                 {
                     Vector3 footPos = hit.point;
                     footPos.y += _groundDistanse;
-                    Debug.Log(footPos);
                     _animator.SetIKPosition(AvatarIKGoal.LeftFoot, footPos);
                     //_animator.SetIKRotation(AvatarIKGoal.LeftFoot, _animator.GetIKRotation(AvatarIKGoal.LeftFoot) * Quaternion.FromToRotation(Vector3.forward, hit.normal));
                 }
@@ -51,7 +50,6 @@ namespace MFFrameWork
                 {
                     Vector3 footPos = hit.point;
                     footPos.y += _groundDistanse;
-                    Debug.Log(footPos);
                     _animator.SetIKPosition(AvatarIKGoal.RightFoot, footPos);
                     //_animator.SetIKRotation(AvatarIKGoal.LeftFoot, _animator.GetIKRotation(AvatarIKGoal.LeftFoot) * Quaternion.FromToRotation(Vector3.forward, hit.normal));
                 }

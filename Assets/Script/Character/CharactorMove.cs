@@ -11,6 +11,8 @@ namespace MFFrameWork
         bool _isGround;
         bool _isDisableMove = true;
 
+        CapsuleCollider _capsuleCollider;
+
 
         public bool IsGround
         {
@@ -20,6 +22,7 @@ namespace MFFrameWork
                 {
                     _isGround = value;
                     OnGroundChanged?.Invoke(_isGround);
+                    Debug.Log("isGround:" + _isGround);
                 }
             }
         }
@@ -45,6 +48,7 @@ namespace MFFrameWork
         private void Start()
         {
             _rb = GetComponent<Rigidbody>();
+            _capsuleCollider = GetComponent<CapsuleCollider>();
         }
         private void Update()
         {
@@ -61,7 +65,7 @@ namespace MFFrameWork
             _dushSpeed = dushPower;
         }
 
-        float IMove.Move(Vector3 moveDirection)//ToDo:HERE　RaycastをSphereChastに変更したい
+        float IMove.Move(Vector3 moveDirection)//ToDo:HERE　RaycastをSphereChastに変更したい 解決
         {
             if (!_isDisableMove) return 0;
             moveDirection = moveDirection.normalized;
@@ -89,6 +93,7 @@ namespace MFFrameWork
         bool IJump.Jump()
         {
             if (!_isDisableMove || !IsGround) return false;
+            Debug.Log("jump");
             _rb.AddForce(Vector3.up * _jumpPower, ForceMode.Impulse);
             return true;
         }
@@ -111,14 +116,20 @@ namespace MFFrameWork
         /// <returns></returns>
         RaycastHit GroundCheck()//ToDo:HERE 接地判定をスフィアキャストなどできれいにとりたい。
         {
-            Debug.DrawRay(transform.position, Vector3.down * _groundDistans, Color.blue);
-            Ray underRay = new Ray(transform.position, transform.up * -1);
-            IsGround = Physics.Raycast(underRay, out RaycastHit groundHit, _groundDistans);
-            if (Vector3.Dot(groundHit.normal, Vector3.up) < _slopelimit * Mathf.Deg2Rad)
+            Debug.DrawRay(transform.position, Vector3.down * _groundDistans, Color.red);
+
+            var spherRad = _capsuleCollider.radius;
+            var startPos = transform.position;
+            startPos.y += spherRad;
+
+            Ray underRay = new Ray(startPos, transform.up * -1);
+            IsGround = Physics.SphereCast(underRay, _capsuleCollider.radius, out RaycastHit hit, _groundDistans + spherRad);
+            //IsGround = Physics.Raycast(underRay, out RaycastHit groundHit, _groundDistans);
+            if (Vector3.Dot(hit.normal, Vector3.up) < _slopelimit * Mathf.Deg2Rad)
             {
                 IsGround = false;
             }
-            return groundHit;
+            return hit;
         }
     }
 }
