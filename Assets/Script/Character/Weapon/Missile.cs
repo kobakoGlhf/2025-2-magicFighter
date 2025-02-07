@@ -7,10 +7,11 @@ namespace MFFrameWork
     {
         [SerializeField] Transform _target;
         [SerializeField] float _speed;
+        [SerializeField] float _lifeTime=10;
 
         [Space]
-        [SerializeField] Vector3 _accleration;
-        [SerializeField] float period = 3;
+        [SerializeField] Vector3 _initialVelocity;
+        [SerializeField] float _period = 3;
         [SerializeField] float _maxAccleration;
         Vector3 _velocity;
         Vector3 _position;
@@ -23,34 +24,37 @@ namespace MFFrameWork
         private void Start()
         {
             _rb = GetComponent<Rigidbody>();
+            Destroy(gameObject, _lifeTime);
         }
-        void IBullet.Init(Transform target, float attackPower, LayerMask ignoreLayer)
+        void IBullet.InitProperties(Transform target, float attackPower, LayerMask ignoreLayer)
         {
             _target = target;
             _hitDamage = attackPower;
             _ignoreLayer = ignoreLayer;
             _position = transform.position;
         }
+        void IBullet.InitPhysicsProperties(Vector3 initVelocity, float hitTime, float maxAcceleration)
+        {
+            _initialVelocity = initVelocity;
+            _period = hitTime;
+            _maxAccleration = maxAcceleration;
+        }
 
         void Update()
         {
             //‰^“®•û’öŽ®‚ðŽg‚Á‚½missile
 
-            var accleration = _accleration;
+            var accleration = _initialVelocity;
 
             var diff = _target.position - transform.position;
-            accleration += (diff - _velocity * period) * 2 / (period * period);
+            accleration += (diff - _velocity * _period) * 2 / (_period * _period);
 
-            if (accleration.magnitude > 100f)
+            if (accleration.magnitude > _maxAccleration)
             {
-                accleration = accleration.normalized * 100f;
+                accleration = accleration.normalized * _maxAccleration;
             }
 
-            period -= Time.deltaTime;
-            if (period < 0)
-            {
-                return;
-            }
+            _period -= Time.deltaTime;
 
             _velocity += accleration * Time.deltaTime;
             _position += _velocity * Time.deltaTime;
@@ -70,10 +74,11 @@ namespace MFFrameWork
             {
                 damageable.Damage(_hitDamage, this.transform);
             }
-            DethBehaviour();
+            DeathBehavior(_hitDamage);
             Destroy(this.gameObject);
         }
-        void DethBehaviour()
+
+        void DeathBehavior(float attackPower)
         {
             Debug.Log("‚±‚±‚Å”š”­");
         }

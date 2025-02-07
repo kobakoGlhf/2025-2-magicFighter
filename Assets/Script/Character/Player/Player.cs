@@ -14,7 +14,6 @@ namespace MFFrameWork
         {
             _playerInput = GetComponent<PlayerInput>();
 
-            _playerMove.OnGroundChanged += (x) => _charactorAnimation.SetBool(AnimationPropertys.IsGround, x);
 
             _playerInput.actions["Move"].performed += x => OnMove(x);
             _playerInput.actions["Move"].canceled += x => CancelMove(x);
@@ -29,7 +28,6 @@ namespace MFFrameWork
             _playerInput.actions["Jump"].started -= x => OnJump(x);
             _playerInput.actions["Dush"].started -= x => OnDush(x);
             _playerInput.actions["Attack"].started -= x => OnAttack(x);
-            _playerMove.OnGroundChanged -= (x) => _charactorAnimation.SetBool(AnimationPropertys.IsGround, x);
         }
 
     }
@@ -56,6 +54,13 @@ namespace MFFrameWork
             _attack = GetComponent<IAttack>();
             Debug.Log(_attack);
             _charactorAnimation.SetAnimator(GetComponent<Animator>());//ToDo:HERE　コンストラクタで代入するように変更したい
+
+            _playerMove.OnGroundChanged += (x) => _charactorAnimation.SetBool(AnimationPropertys.IsGround, x);
+            _currentHealth = _status.MaxHealth;
+            if(_currentHealth <= 0)
+            {
+                DeathBehavior();
+            }
             Start_S();
         }
         public virtual void Start_S() { }
@@ -72,7 +77,12 @@ namespace MFFrameWork
         int IDamageable.HitPoint { get => _currentHealth; }
         void IDamageable.Damage(float damage, Transform hitObjTransform)
         {
-            Debug.Log($"{this} hit Damage {damage}");
+            _currentHealth -= (int)damage;
+            if (_currentHealth <= 0)
+            {
+                _currentHealth = 0;
+                DeathBehavior();
+            }
         }
 
         void IDamageable.HealthHeel(float heel)//ToDo:HERE 回復が上限を突破しないように
@@ -80,9 +90,9 @@ namespace MFFrameWork
             Debug.Log($"{this} hit Damage {heel}");
         }
 
-        void IDamageable.DeathBehavior()
+        public void DeathBehavior()
         {
-            Debug.Log($"{this} Death");
+            //Destroy(gameObject);
         }
         #region Move
         protected void OnMove(InputAction.CallbackContext context)
@@ -173,6 +183,7 @@ namespace MFFrameWork
     }
     interface IBullet
     {
-        void Init(Transform target, float attackPower, LayerMask dontIgnoreLayer);
+        void InitProperties(Transform target, float attackPower, LayerMask dontIgnoreLayer);
+        void InitPhysicsProperties(Vector3 initVelocity, float hitTime, float maxAcceleration);
     }
 }
