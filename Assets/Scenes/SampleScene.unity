@@ -732,11 +732,11 @@ MonoBehaviour:
   _useCamera: 1
   _moveSpeed: 19.9
   _jumpPower: 677.2
-  _dushSpeed: 500
-  _dushCoolTime: 0.49
+  _dushSpeed: 700
+  _dushCoolTime: 0.3
   _rotateSpeed: 5.74
   _landingDelayTime: 0.5
-  _landingPower: -5
+  _landingPower: -10
 --- !u!95 &320751453
 Animator:
   serializedVersion: 7
