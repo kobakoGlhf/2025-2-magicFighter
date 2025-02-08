@@ -1,5 +1,6 @@
 using MFFrameWork.Utilities;
 using System;
+using System.Threading;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -7,7 +8,7 @@ namespace MFFrameWork
 {
 
     [RequireComponent(typeof(Rigidbody), typeof(PlayerInput), typeof(CharactorMove))]
-    public class Player : Charactor_B
+    public class Player : Character_B
     {
         PlayerInput _playerInput;
         public override void Start_S()
@@ -15,62 +16,67 @@ namespace MFFrameWork
             _playerInput = GetComponent<PlayerInput>();
 
 
-            _playerInput.actions["Move"].performed += x => OnMove(x);
-            _playerInput.actions["Move"].canceled += x => CancelMove(x);
-            _playerInput.actions["Jump"].started += x => OnJump(x);
-            _playerInput.actions["Dush"].started += x => OnDush(x);
-            _playerInput.actions["Attack"].started += x => OnAttack(x);
+            _playerInput.actions["Move"].performed += x => OnMove(x.ReadValue<Vector2>());
+            _playerInput.actions["Move"].canceled += x => CancelMove();
+            _playerInput.actions["Jump"].started += x => OnJump();
+            _playerInput.actions["Dush"].started += x => OnDush();
+            _playerInput.actions["Attack"].started += x => OnAttack();
         }
         private void OnDisable()
         {
-            _playerInput.actions["Move"].performed -= x => OnMove(x);
-            _playerInput.actions["Move"].canceled -= x => CancelMove(x);
-            _playerInput.actions["Jump"].started -= x => OnJump(x);
-            _playerInput.actions["Dush"].started -= x => OnDush(x);
-            _playerInput.actions["Attack"].started -= x => OnAttack(x);
+            _playerInput.actions["Move"].performed -= x => OnMove(x.ReadValue<Vector2>());
+            _playerInput.actions["Move"].canceled -= x => CancelMove();
+            _playerInput.actions["Jump"].started -= x => OnJump();
+            _playerInput.actions["Dush"].started -= x => OnDush();
+            _playerInput.actions["Attack"].started -= x => OnAttack();
         }
-
     }
-    public abstract class Charactor_B : MonoBehaviour, IDamageable
+
+    [RequireComponent(typeof(Rigidbody), typeof(PlayerInput), typeof(CharactorMove))]
+    public abstract class Character_B : MonoBehaviour, IDamageable
     {
-        [SerializeField] protected ICharactorMove _playerMove;
+        [SerializeField] protected ICharacterMove _playerMove;
         [SerializeField] protected Transform _originTransform;
         [SerializeField] IAttack _attack;
         protected CharactorAnimation _charactorAnimation = new();
         protected Rigidbody _rb;
         protected bool _attackCancel;
-        Vector3 _moveDirection;
+        protected Vector3 _moveDirection;
+        public Transform _targetPos;
 
         [SerializeField] Status _status;
         protected int _currentHealth = 10;
         bool _isInvincible;
 
-        public Transform _targetPos;
+        CancellationTokenSource _attackCancelToken = new();
         protected int AttackPower { get => _status.AttackPower; }
         private void Start()
         {
             _rb = GetComponent<Rigidbody>();
-            _playerMove = GetComponent<CharactorMove>();
+            _playerMove = GetComponent<ICharacterMove>();
             _attack = GetComponent<IAttack>();
-            Debug.Log(_attack);
             _charactorAnimation.SetAnimator(GetComponent<Animator>());//ToDo:HERE　コンストラクタで代入するように変更したい
 
-            _playerMove.OnGroundChanged += (x) => _charactorAnimation.SetBool(AnimationPropertys.IsGround, x);
+
+            //パラメーターの初期化
             _currentHealth = _status.MaxHealth;
-            if(_currentHealth <= 0)
+            if (_currentHealth <= 0)
             {
                 DeathBehavior();
             }
+
+            _playerMove.OnGroundChanged += x => _charactorAnimation.SetBool(AnimationPropertys.IsGround, x);
+
+            _playerMove.Init();
             Start_S();
         }
         public virtual void Start_S() { }
 
         void FixedUpdate()
         {
-            var cameraRotationY = Quaternion.Euler(0, _originTransform.transform.rotation.eulerAngles.y, 0);
-            var moveSpeed = _playerMove?.Move(cameraRotationY * _moveDirection);
-            //var moveSpeed = _playerMove?.Move(_moveDirection);
-            if (moveSpeed is not null) _charactorAnimation.SetFloat(AnimationPropertys.MoveSpeed, moveSpeed.Value);
+            _playerMove?.Move(_moveDirection, () => _charactorAnimation.SetFloat(
+                AnimationPropertys.MoveSpeed,
+                Vector3.Scale(_playerMove.Velocity, new Vector3(1, 0, 1)).magnitude));
             Fixed_S();
         }
         public virtual void Fixed_S() { }
@@ -92,39 +98,35 @@ namespace MFFrameWork
 
         public void DeathBehavior()
         {
-            //Destroy(gameObject);
+            Destroy(gameObject);
         }
         #region Move
-        protected void OnMove(InputAction.CallbackContext context)
+        protected void OnMove(Vector2 moveDirection)
         {
             if ((_playerMove is null).ChackLog("move is null")) return;
-            var moveDirection = context.ReadValue<Vector2>();
             //var cameraRotationY = Quaternion.Euler(0, _originTransform.transform.rotation.eulerAngles.y, 0);
             //_moveDirection = cameraRotationY * new Vector3(moveDirection.x, 0, moveDirection.y).normalized;
             _moveDirection = new Vector3(moveDirection.x, 0, moveDirection.y).normalized;
         }
-        protected void CancelMove(InputAction.CallbackContext context)
+        protected void CancelMove()
         {
             if ((_playerMove is null).ChackLog("move is null")) return;
             _moveDirection = Vector3.zero;
         }
-        protected void OnJump(InputAction.CallbackContext context)
+        protected void OnJump()
         {
             if ((_playerMove is null).ChackLog("jump is null")) return;
-            var jumped = _playerMove.Jump();
-            if (jumped) _charactorAnimation.SetTrigger(AnimationPropertys.JumpTrigger);
+            _playerMove.Jump(() => _charactorAnimation.SetTrigger(AnimationPropertys.JumpTrigger));
         }
-        protected void OnDush(InputAction.CallbackContext context)
+        protected void OnDush()
         {
             if ((_playerMove is null).ChackLog("dush is null")) return;
-            var cameraRotationY = Quaternion.Euler(0, _originTransform.transform.rotation.eulerAngles.y, 0);
-            _playerMove.Dush(cameraRotationY * _moveDirection, () => { });
-            _charactorAnimation.SetTrigger(AnimationPropertys.DushTrigger);
+            _playerMove.Dush(_moveDirection, () => _charactorAnimation.SetTrigger(AnimationPropertys.DushTrigger));
         }
-        protected void OnAttack(InputAction.CallbackContext context)
+        protected void OnAttack()
         {
             if ((_attack is null).ChackLog("Attack is null")) return;
-            _attack.OnAttack(_targetPos, AttackPower, _attackCancel);
+            _attack.OnAttack(_targetPos, AttackPower, _attackCancelToken.Token);
         }
         #endregion
 
@@ -145,34 +147,32 @@ namespace MFFrameWork
             _invincibleTime = invincibleTime;
         }
     }
-    public interface ICharactorMove : IMove, IJump, IDush
+    public interface ICharacterMove : IMove, IJump, IDush
     {
         bool IsGround { get; }
         event Action<bool> OnGroundChanged;
+        Transform Target { get; set; }
+        void Init();
     }
     public interface IMove
     {
+        Vector3 Velocity { get; }
         float MoveSpeed { get; set; }
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="moveDirection"></param>
-        /// <returns>Velocity magnitude</returns>
-        float Move(Vector3 moveDirection);
+        void Move(Vector3 moveDirection, Action action = null);
     }
     public interface IJump
     {
         float JumpPower { get; set; }
-        bool Jump();
+        void Jump(Action action = null);
     }
     public interface IDush
     {
         float DushSpeed { get; set; }
-        void Dush(Vector3 moveDirection, Action animatorAction);
+        void Dush(Vector3 moveDirection, Action animatorAction = null);
     }
     public interface IAttack
     {
-        void OnAttack(Transform target, float attackPower, bool cancel);
+        void OnAttack(Transform target, float attackPower, CancellationToken token = default);
     }
     public interface IDamageable
     {

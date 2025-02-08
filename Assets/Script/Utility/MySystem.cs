@@ -1,4 +1,5 @@
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 
@@ -25,14 +26,19 @@ namespace MFFrameWork.Utilities
         static bool _isPause;
         public static void Pause()=>_isPause = true.ChackLog("Paused");
         public static void Resume() => _isPause = false.ChackLog("Resumed");
-        public async static Task PausableWaitForSeconds(float waitSeconds)
+        public async static Task PausableWaitForSeconds(float waitSeconds, CancellationToken token = default, Action action = null)
         {
-            float timer = 0;
-            while (waitSeconds > timer)
+            float timer = waitSeconds;
+            try
             {
-                timer += Time.deltaTime;
-                await Awaitable.EndOfFrameAsync();
+                while (timer > 0)
+                {
+                    timer -= Time.deltaTime;
+                    await Awaitable.EndOfFrameAsync();
+                }
+                action?.Invoke();
             }
+            catch { Debug.Log("Cancel"); }
         }
     }
 

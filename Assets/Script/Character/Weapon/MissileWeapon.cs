@@ -1,3 +1,4 @@
+using System.Threading;
 using UnityEngine;
 
 namespace MFFrameWork
@@ -11,7 +12,7 @@ namespace MFFrameWork
         [SerializeField] int _missileCount;
         private void Start()
         {
-            if(!_bulletObj.TryGetComponent<IBullet>(out IBullet bullet))
+            if(!_bulletObj.TryGetComponent(out IBullet bullet))
             {
                 Debug.LogError("AttackObjにはIBullet継承のオブジェクトをアサインしてください");
                 _bulletObj = null;
@@ -22,7 +23,7 @@ namespace MFFrameWork
         {
 
         }
-        protected override void Attack(Transform target, float attackPower, bool cancel)
+        protected override void Attack(Transform target, float attackPower, CancellationToken token)
         {
             if (_bulletObj == null) Debug.Log("AttackObject is null");
             for (var i = 0; i < _missileCount; i++)

@@ -710,11 +710,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _originTransform: {fileID: 330585546}
-  _status:
-    _maxHealth: 0
-    _attackPower: 0
-    _invincibleTime: 1
   _targetPos: {fileID: 473949664}
+  _status:
+    _maxHealth: 100
+    _attackPower: 1
+    _invincibleTime: 1
 --- !u!114 &320751452
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -729,11 +729,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _slopelimit: 45
   _groundDistans: 0.5
+  _useCamera: 1
   _moveSpeed: 19.9
   _jumpPower: 677.2
-  _dushSpeed: 1000
+  _dushSpeed: 500
   _dushCoolTime: 0.49
   _rotateSpeed: 5.74
+  _landingDelayTime: 0.5
+  _landingPower: -5
 --- !u!95 &320751453
 Animator:
   serializedVersion: 7
@@ -2270,7 +2273,7 @@ Transform:
   m_GameObject: {fileID: 567521740}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 2.836, y: 1.236, z: 6.822}
+  m_LocalPosition: {x: 2.836, y: 1.236, z: 6.5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -2358,11 +2361,11 @@ GameObject:
   - component: {fileID: 630286552}
   - component: {fileID: 630286551}
   - component: {fileID: 630286550}
-  - component: {fileID: 630286549}
+  - component: {fileID: 630286556}
   - component: {fileID: 630286548}
   - component: {fileID: 630286547}
   m_Layer: 8
-  m_Name: Player (1)
+  m_Name: Enemy
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2399,29 +2402,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _slopelimit: 45
   _groundDistans: 0.5
+  _useCamera: 0
   _moveSpeed: 19.9
   _jumpPower: 677.2
   _dushSpeed: 1000
   _dushCoolTime: 0.49
   _rotateSpeed: 5.74
---- !u!114 &630286549
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 630286546}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: d4a55107988c61c4291964a843726f03, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  _originTransform: {fileID: 330585546}
-  _status:
-    _maxHealth: 0
-    _attackPower: 0
-    _invincibleTime: 1
-  _targetPos: {fileID: 26009508}
+  _landingDelayTime: 10
+  _landingPower: -3
 --- !u!114 &630286550
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2434,10 +2422,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a745a67a62d996f42832d3a5b045f610, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _weaponCoolTime: 0
+  _weaponCoolTime: 1
   _bulletObj: {fileID: 3026003228963371689, guid: 9bc9be285eb507c47b2dd1aaf22c7f65, type: 3}
   _muzzleTransform: {fileID: 1167344106}
-  _tracking: 1000
+  _tracking: 350
   _missileCount: 10
 --- !u!95 &630286551
 Animator:
@@ -2559,6 +2547,28 @@ Transform:
   - {fileID: 473949664}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &630286556
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 630286546}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8c2f7f4b1db65a4499df1a65e507672c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _originTransform: {fileID: 0}
+  _targetPos: {fileID: 320751448}
+  _status:
+    _maxHealth: 100
+    _attackPower: 1
+    _invincibleTime: 1
+  _targetObj: {fileID: 320751448}
+  _modeChangeDistanse: 30
+  _time: 0
+  _testState: 1
 --- !u!4 &654835583 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -1812909498023395591, guid: 2eaab5834a5422844b512e0217dc35fe, type: 3}
@@ -5642,7 +5652,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3026003228963371689, guid: 9bc9be285eb507c47b2dd1aaf22c7f65, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4557356392930903309, guid: 9bc9be285eb507c47b2dd1aaf22c7f65, type: 3}
       propertyPath: m_LocalPosition.x
@@ -5682,6 +5692,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4557356392930903309, guid: 9bc9be285eb507c47b2dd1aaf22c7f65, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6004475415492006073, guid: 9bc9be285eb507c47b2dd1aaf22c7f65, type: 3}
+      propertyPath: m_Enabled
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 9154464521282955426, guid: 9bc9be285eb507c47b2dd1aaf22c7f65, type: 3}

@@ -1,3 +1,4 @@
+using System.Threading;
 using UnityEngine;
 
 namespace MFFrameWork
@@ -6,16 +7,19 @@ namespace MFFrameWork
     {
         [SerializeField] float _weaponCoolTime;
         float _lastExecutionTime;
-        public void OnAttack(Transform _targetPos, float attackPower, bool cancel)
+        public void OnAttack(Transform _targetPos, float attackPower, CancellationToken token)
         {
-            if(Time.time - _lastExecutionTime > _weaponCoolTime)
+            if (Time.time - _lastExecutionTime > _weaponCoolTime)
             {
-                Attack(_targetPos, attackPower, cancel);
+                Attack(_targetPos, attackPower, token);
                 _lastExecutionTime = Time.time;
             }
-            else Debug.Log("Unused"+ (Time.time-_lastExecutionTime).ToString());
+            else
+            {
+                Debug.Log("Unused" + (Time.time - _lastExecutionTime).ToString());
+            }
         }
 
-        protected abstract void Attack(Transform _targetPos, float attackPower, bool cancel);
+        protected abstract void Attack(Transform _targetPos, float attackPower, CancellationToken token);
     }
 }

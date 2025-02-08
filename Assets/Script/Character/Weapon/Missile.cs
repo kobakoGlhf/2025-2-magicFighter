@@ -46,7 +46,7 @@ namespace MFFrameWork
 
             var accleration = _initialVelocity;
 
-            var diff = _target.position - transform.position;
+            var diff = transform.position;
             accleration += (diff - _velocity * _period) * 2 / (_period * _period);
 
             if (accleration.magnitude > _maxAccleration)
