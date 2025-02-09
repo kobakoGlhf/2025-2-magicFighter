@@ -1,9 +1,10 @@
+using MFFrameWork.Utilities;
 using UnityEngine;
 
 namespace MFFrameWork
 {
     [RequireComponent(typeof(Rigidbody))]
-    public class Missile : MonoBehaviour, IBullet
+    public class Missile : Bullet_B, IMissile
     {
         [SerializeField] Transform _target;
         [SerializeField] float _speed;
@@ -17,24 +18,17 @@ namespace MFFrameWork
         Vector3 _position;
 
         [SerializeField] GameObject _effect;
-        float _hitDamage;
+        public float LifeTime { get => _lifeTime; set => _lifeTime = value; }
         Rigidbody _rb;
-        LayerMask _ignoreLayer;
 
         private void Start()
         {
             _rb = GetComponent<Rigidbody>();
-            Destroy(gameObject, _lifeTime);
+            Pausable.PausableDestroy(gameObject, _lifeTime);
         }
-        void IBullet.InitProperties(Transform target, float attackPower, LayerMask ignoreLayer)
+        void IMissile.InitPhysicsProperties(Transform target, Vector3 initVelocity, float hitTime, float maxAcceleration)
         {
             _target = target;
-            _hitDamage = attackPower;
-            _ignoreLayer = ignoreLayer;
-            _position = transform.position;
-        }
-        void IBullet.InitPhysicsProperties(Vector3 initVelocity, float hitTime, float maxAcceleration)
-        {
             _initialVelocity = initVelocity;
             _period = hitTime;
             _maxAccleration = maxAcceleration;
@@ -65,20 +59,11 @@ namespace MFFrameWork
             //    _rb.linearVelocity = targetVector * _speed;
         }
 
-        private void OnTriggerEnter(Collider other)
+        protected override void OnHitTrigger(IDamageable damageable)
         {
-            if (other.gameObject.layer == _ignoreLayer ||
-                other.gameObject.layer == gameObject.layer) return;
-
-            if (other.TryGetComponent(out IDamageable damageable))
-            {
-                damageable.Damage(_hitDamage, this.transform);
-            }
-            DeathBehavior(_hitDamage);
-            Destroy(this.gameObject);
+            damageable.Damage(Damage, this.transform);
         }
-
-        void DeathBehavior(float attackPower)
+        protected override void DeathBehavior(float attackPower)
         {
             Debug.Log("‚±‚±‚Å”š”­");
         }

@@ -20,7 +20,9 @@ namespace MFFrameWork
             _playerInput.actions["Move"].canceled += x => CancelMove();
             _playerInput.actions["Jump"].started += x => OnJump();
             _playerInput.actions["Dush"].started += x => OnDush();
-            _playerInput.actions["Attack"].started += x => OnAttack();
+            _playerInput.actions["MainAttack"].started += x => OnAttack();
+            _playerInput.actions["SubAttack"].started += x => OnSubAttack();
+            _playerInput.actions["SkillAttack"].started += x => OnSkillAttack();
         }
         private void OnDisable()
         {
@@ -28,7 +30,9 @@ namespace MFFrameWork
             _playerInput.actions["Move"].canceled -= x => CancelMove();
             _playerInput.actions["Jump"].started -= x => OnJump();
             _playerInput.actions["Dush"].started -= x => OnDush();
-            _playerInput.actions["Attack"].started -= x => OnAttack();
+            _playerInput.actions["MainAttack"].started -= x => OnAttack();
+            _playerInput.actions["SubAttack"].started -= x => OnSubAttack();
+            _playerInput.actions["SkillAttack"].started -= x => OnSkillAttack();
         }
     }
 
@@ -37,7 +41,9 @@ namespace MFFrameWork
     {
         [SerializeField] protected ICharacterMove _playerMove;
         [SerializeField] protected Transform _originTransform;
-        [SerializeField] IAttack _attack;
+        [SerializeField] Weapon_B _mainAttack;
+        [SerializeField] Weapon_B _subAttack;
+        [SerializeField] Weapon_B _skillAttack;
         protected CharactorAnimation _charactorAnimation = new();
         protected Rigidbody _rb;
         protected bool _attackCancel;
@@ -54,7 +60,6 @@ namespace MFFrameWork
         {
             _rb = GetComponent<Rigidbody>();
             _playerMove = GetComponent<ICharacterMove>();
-            _attack = GetComponent<IAttack>();
             _charactorAnimation.SetAnimator(GetComponent<Animator>());//ToDo:HERE　コンストラクタで代入するように変更したい
 
 
@@ -125,8 +130,20 @@ namespace MFFrameWork
         }
         protected void OnAttack()
         {
-            if ((_attack is null).ChackLog("Attack is null")) return;
-            _attack.OnAttack(_targetPos, AttackPower, _attackCancelToken.Token);
+            if ((_mainAttack is null).ChackLog("Attack is null")) return;
+            _mainAttack.OnAttack(_targetPos, AttackPower, _attackCancelToken.Token);
+        }
+
+        protected void OnSubAttack()
+        {
+            if ((_subAttack is null).ChackLog("Attack is null")) return;
+            _subAttack.OnAttack(_targetPos, AttackPower, _attackCancelToken.Token);
+        }
+
+        protected void OnSkillAttack()
+        {
+            if ((_skillAttack is null).ChackLog("Attack is null")) return;
+            _skillAttack.OnAttack(_targetPos, AttackPower, _attackCancelToken.Token);
         }
         #endregion
 
@@ -181,9 +198,14 @@ namespace MFFrameWork
         void Damage(float damage, Transform hitObjTransform);
         void DeathBehavior();
     }
+
     interface IBullet
     {
-        void InitProperties(Transform target, float attackPower, LayerMask dontIgnoreLayer);
-        void InitPhysicsProperties(Vector3 initVelocity, float hitTime, float maxAcceleration);
+        void Init(float damage, LayerMask layer, float lifeTime);
+    }
+
+    interface IMissile : IBullet
+    {
+        void InitPhysicsProperties(Transform target,Vector3 initVelocity, float hitTime, float maxAcceleration);
     }
 }

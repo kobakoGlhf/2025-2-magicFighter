@@ -9,10 +9,13 @@ namespace MFFrameWork
         [SerializeField] Transform _muzzleTransform;
         [SerializeField] float _tracking;
 
+        [SerializeField] float _lifeTime = 10;
+        [SerializeField] float _hitTime = 2;
+
         [SerializeField] int _missileCount;
         private void Start()
         {
-            if(!_bulletObj.TryGetComponent(out IBullet bullet))
+            if (!_bulletObj.TryGetComponent(out IMissile bullet))
             {
                 Debug.LogError("AttackObjにはIBullet継承のオブジェクトをアサインしてください");
                 _bulletObj = null;
@@ -28,14 +31,15 @@ namespace MFFrameWork
             if (_bulletObj == null) Debug.Log("AttackObject is null");
             for (var i = 0; i < _missileCount; i++)
             {
-                IBullet bullet = Instantiate(_bulletObj, _muzzleTransform.position, _muzzleTransform.rotation).GetComponent<IBullet>();
-                bullet.InitProperties(target, attackPower, gameObject.layer);
+                IMissile bullet = Instantiate(_bulletObj, _muzzleTransform.position, _muzzleTransform.rotation).GetComponent<IMissile>();
+                bullet.Init(attackPower, gameObject.layer, _lifeTime);
 
                 Vector3 vec = target.position - transform.position;
                 var n = Vector3.Cross(vec, Vector3.up);
                 n *= Random.Range(-1f, 1f);
-                n.y+= Random.Range(0, 1f)*10;
-                bullet.InitPhysicsProperties(n, 2, _tracking);
+                n.y += Random.Range(0, 1f) * 10;
+
+                bullet.InitPhysicsProperties(target, n, 2, _tracking);
             }
         }
     }

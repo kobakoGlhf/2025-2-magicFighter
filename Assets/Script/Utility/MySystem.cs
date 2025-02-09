@@ -24,7 +24,7 @@ namespace MFFrameWork.Utilities
     public class Pausable
     {
         static bool _isPause;
-        public static void Pause()=>_isPause = true.ChackLog("Paused");
+        public static void Pause() => _isPause = true.ChackLog("Paused");
         public static void Resume() => _isPause = false.ChackLog("Resumed");
         public async static Task PausableWaitForSeconds(float waitSeconds, CancellationToken token = default, Action action = null)
         {
@@ -39,6 +39,15 @@ namespace MFFrameWork.Utilities
                 action?.Invoke();
             }
             catch { Debug.Log("Cancel"); }
+        }
+        public async static Task PausableDestroy(GameObject gameObject, float waitSeconds)
+        {
+            float timer = Time.time;
+            while (timer + waitSeconds > Time.time && gameObject)
+            {
+                await Awaitable.EndOfFrameAsync();
+            }
+            UnityEngine.Object.Destroy(gameObject);
         }
     }
 
@@ -65,19 +74,19 @@ namespace MFFrameWork.Utilities
         protected virtual void OnAwake() { }
         void SetUpSingleton()
         {
-            if( instanse == null)
+            if (instanse == null)
             {
                 instanse = this as T;
-                Transform parent=instanse.transform;
-                while(parent.parent != null)
+                Transform parent = instanse.transform;
+                while (parent.parent != null)
                 {
                     parent = parent.parent;
                 }
                 DontDestroyOnLoad(parent);
             }
-            else 
+            else
                 Destroy(this);
         }
     }
-    
+
 }
