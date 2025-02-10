@@ -71,7 +71,7 @@ namespace MFFrameWork
 
             _timer += Time.deltaTime;
 
-            if (_targetPos && _timer > 1.2f)
+            if (TargetTransform && _timer > 1.2f)
             {
                 _timer = 0;
                 ChangeRandomDirection();

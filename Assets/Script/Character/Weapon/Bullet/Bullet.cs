@@ -27,8 +27,7 @@ namespace MFFrameWork
             _excludedLayer = layer;
 
 
-            await Pausable.PausableWaitForSeconds(lifeTime, _tokenSource.Token);
-            if (this != null) Destroy(gameObject);
+            await Pausable.PausableWaitForSeconds(lifeTime, _tokenSource.Token,()=> Destroy(gameObject));
         }
 
         void OnTriggerEnter(Collider other)
@@ -41,6 +40,7 @@ namespace MFFrameWork
                 OnHitTrigger(damageable);
             }
             DeathBehavior(Damage);
+            _tokenSource.Cancel();
             BulletDestroy();
         }
         protected virtual void DeathBehavior(float damage)
@@ -50,7 +50,6 @@ namespace MFFrameWork
         protected virtual void BulletDestroy()
         {
             if(this!=null) Destroy(gameObject);
-            _tokenSource.Cancel();
         }
         protected abstract void OnHitTrigger(IDamageable damageable);
     }

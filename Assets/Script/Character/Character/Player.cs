@@ -46,10 +46,31 @@ namespace MFFrameWork
         protected Rigidbody _rb;
         protected bool _attackCancel;
         protected Vector3 _moveDirection;
-        public Transform _targetPos;
+        private Transform _targetTransform;
+        CancellationTokenSource _attackCancelToken = new();
 
         [SerializeField] Status _status;
         protected int _currentHealth = 10;
+        bool _isInvincible;
+
+
+        public Action<float, float> OnChangeHealth;
+        public Action<Transform> OnChangeTarget;
+
+        protected int AttackPower { get => _status.AttackPower; }
+        public Transform TargetTransform
+        {
+            get => _targetTransform;
+            set
+            {
+                if (_targetTransform != value)
+                {
+                    _targetTransform = value;
+                    OnChangeTarget?.Invoke(_targetTransform);
+                    Debug.Log("TargetName : " + (_targetTransform is not null ? _targetTransform.name : "is null"));
+                }
+            }
+        }
         public int CurrentHealth
         {
             get => _currentHealth; set
@@ -62,12 +83,6 @@ namespace MFFrameWork
                 }
             }
         }
-        bool _isInvincible;
-
-        CancellationTokenSource _attackCancelToken = new();
-
-        public Action<float, float> OnChangeHealth;
-        protected int AttackPower { get => _status.AttackPower; }
         private void Start()
         {
             _rb = GetComponent<Rigidbody>();
@@ -146,19 +161,19 @@ namespace MFFrameWork
         protected void OnAttack()
         {
             if ((_mainAttack is null).ChackLog("Attack is null")) return;
-            _mainAttack.OnAttack(_targetPos, AttackPower, _attackCancelToken.Token);
+            _mainAttack.OnAttack(_targetTransform, AttackPower, _attackCancelToken.Token);
         }
 
         protected void OnSubAttack()
         {
             if ((_subAttack is null).ChackLog("Attack is null")) return;
-            _subAttack.OnAttack(_targetPos, AttackPower, _attackCancelToken.Token);
+            _subAttack.OnAttack(_targetTransform, AttackPower, _attackCancelToken.Token);
         }
 
         protected void OnSkillAttack()
         {
             if ((_skillAttack is null).ChackLog("Attack is null")) return;
-            _skillAttack.OnAttack(_targetPos, AttackPower, _attackCancelToken.Token);
+            _skillAttack.OnAttack(_targetTransform, AttackPower, _attackCancelToken.Token);
         }
         #endregion
 

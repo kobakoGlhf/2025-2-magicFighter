@@ -6,6 +6,8 @@ namespace MFFrameWork
 {
     public class PlayerCameraManager : MonoBehaviour
     {
+        Player _player;
+
         List<EnemyManager> _enemyManager = new();
 
         [SerializeField]
@@ -15,18 +17,30 @@ namespace MFFrameWork
         void Start()
         {
             _enemyManager = FindObjectsByType<EnemyManager>(FindObjectsSortMode.None).ToList();
+            _player = FindFirstObjectByType<Player>();
         }
 
         // Update is called once per frame
-        void FixedUpdate()
+        void FixedUpdate()//ToDo:HERE åªç›ìGÇ™1ëÃÇµÇ©Ç¢Ç»Ç¢ÇΩÇﬂìKìñÇ≈Ç∑
         {
             foreach (var obj in _enemyManager)
             {
-                Debug.Log(obj.name);
-                CheckDirectionRange(obj.transform);
+                if (!obj)
+                {
+                    _enemyManager.Remove(obj);
+                }
+                else if (CheckDirectionRange(obj.transform))
+                {
+                    _player.TargetTransform = obj.transform;
+                    break;
+                }
+                else
+                {
+                    _player.TargetTransform = null;
+                    break;
+                }
             }
         }
-
         bool CheckDirectionRange(Transform target)
         {
             var direction = target.position - transform.position;
@@ -38,7 +52,6 @@ namespace MFFrameWork
 
 
             var n = Vector3.Scale(minCross, maxCross);
-            Debug.Log($"{n} a:{minCross}  b:{maxCross} bool:{n.x < 0 && n.y < 0}");
 
             Debug.DrawLine(transform.position, transform.rotation * Vector3.forward * 10, Color.blue);
             Debug.DrawLine(transform.position, transform.rotation * Vector3.Scale(_lockOnFov, new Vector3(1, 1, 1)) * 60, Color.green);
