@@ -562,8 +562,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _player: {fileID: 320751450}
   _enemy: {fileID: 630286556}
+  _canvas: {fileID: 280904308}
   _playerHpbar: {fileID: 857818088}
   _enemyHpbar: {fileID: 144544666}
+  _lockOnCursor: {fileID: 315379024}
 --- !u!4 &291974326 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8169382868667117632, guid: 2eaab5834a5422844b512e0217dc35fe, type: 3}
@@ -783,7 +785,6 @@ MonoBehaviour:
   _mainAttack: {fileID: 320751456}
   _subAttack: {fileID: 0}
   _skillAttack: {fileID: 320751455}
-  _targetPos: {fileID: 630286555}
   _status:
     _maxHealth: 100
     _attackPower: 1
@@ -868,6 +869,7 @@ MonoBehaviour:
   _lifeTime: 10
   _hitTime: 2
   _missileCount: 10
+  _nullTargetRange: 80
 --- !u!114 &320751456
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -885,6 +887,7 @@ MonoBehaviour:
   _bulletPrefab: {fileID: 7910334992373346694, guid: 8f4ec864ce21bdc4db4e6b75f5991fbc, type: 3}
   _speed: 50
   _lifeTime: 10
+  _nullTargetRange: 80
 --- !u!1 &330585543
 GameObject:
   m_ObjectHideFlags: 0
@@ -897,6 +900,7 @@ GameObject:
   - component: {fileID: 330585545}
   - component: {fileID: 330585544}
   - component: {fileID: 330585547}
+  - component: {fileID: 330585549}
   - component: {fileID: 330585548}
   m_Layer: 0
   m_Name: Main Camera
@@ -1055,6 +1059,19 @@ MonoBehaviour:
       m_PostInfinity: 2
       m_RotationOrder: 4
   CustomBlends: {fileID: 0}
+--- !u!114 &330585549
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 330585543}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2292b538589c48b48aeb37cd206ff927, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _lockOnFov: {x: 0.6, y: 0.4, z: 1}
 --- !u!1 &348370167 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 1082271958561512970, guid: 2eaab5834a5422844b512e0217dc35fe, type: 3}
@@ -2455,6 +2472,7 @@ GameObject:
   - component: {fileID: 630286550}
   - component: {fileID: 630286556}
   - component: {fileID: 630286548}
+  - component: {fileID: 630286557}
   - component: {fileID: 630286547}
   m_Layer: 8
   m_Name: Enemy
@@ -2521,6 +2539,7 @@ MonoBehaviour:
   _lifeTime: 10
   _hitTime: 2
   _missileCount: 10
+  _nullTargetRange: 80
 --- !u!95 &630286551
 Animator:
   serializedVersion: 7
@@ -2654,10 +2673,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _originTransform: {fileID: 0}
-  _mainAttack: {fileID: 0}
+  _mainAttack: {fileID: 630286557}
   _subAttack: {fileID: 0}
   _skillAttack: {fileID: 630286550}
-  _targetPos: {fileID: 320751448}
   _status:
     _maxHealth: 100
     _attackPower: 1
@@ -2666,6 +2684,24 @@ MonoBehaviour:
   _modeChangeDistanse: 30
   _time: 0
   _testState: 1
+--- !u!114 &630286557
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 630286546}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 955032a61d22cc2419b19bd729f4d52d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _weaponCoolTime: 1
+  _muzzle: {fileID: 630286555}
+  _bulletPrefab: {fileID: 7910334992373346694, guid: 8f4ec864ce21bdc4db4e6b75f5991fbc, type: 3}
+  _speed: 30
+  _lifeTime: 10
+  _nullTargetRange: 80
 --- !u!4 &654835583 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -1812909498023395591, guid: 2eaab5834a5422844b512e0217dc35fe, type: 3}
@@ -4132,7 +4168,7 @@ MonoBehaviour:
   TargetOffset: {x: 0, y: 1, z: 0}
   TrackerSettings:
     BindingMode: 4
-    PositionDamping: {x: 0.5, y: 0.5, z: 0.5}
+    PositionDamping: {x: 0.2, y: 0.2, z: 0.2}
     AngularDampingMode: 0
     RotationDamping: {x: 1, y: 1, z: 1}
     QuaternionDamping: 1
