@@ -883,8 +883,8 @@ MonoBehaviour:
   _weaponCoolTime: 0
   _muzzle: {fileID: 2069652347}
   _bulletPrefab: {fileID: 7910334992373346694, guid: 8f4ec864ce21bdc4db4e6b75f5991fbc, type: 3}
-  _speed: 5
-  _lifeTime: 1
+  _speed: 50
+  _lifeTime: 10
 --- !u!1 &330585543
 GameObject:
   m_ObjectHideFlags: 0
@@ -5771,7 +5771,7 @@ Transform:
   m_GameObject: {fileID: 2069652346}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.51, y: 1.4, z: 0}
+  m_LocalPosition: {x: -0.398, y: 1.4, z: -0.188}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
