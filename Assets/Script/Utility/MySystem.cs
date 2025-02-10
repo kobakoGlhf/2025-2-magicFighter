@@ -33,6 +33,7 @@ namespace MFFrameWork.Utilities
             {
                 while (timer > 0)
                 {
+                    token.ThrowIfCancellationRequested();
                     timer -= Time.deltaTime;
                     await Awaitable.EndOfFrameAsync();
                 }

@@ -1,5 +1,6 @@
 using MFFrameWork.Utilities;
 using UnityEngine;
+using UnityEngine.VFX;
 
 namespace MFFrameWork
 {
@@ -18,14 +19,16 @@ namespace MFFrameWork
         Vector3 _position;
         Vector3 _targetPos;
 
-        [SerializeField] GameObject _effect;
+        VisualEffect _effect;
         public float LifeTime { get => _lifeTime; set => _lifeTime = value; }
         Rigidbody _rb;
 
-        private void Start()
+        private async void Start()
         {
             _rb = GetComponent<Rigidbody>();
-            Pausable.PausableDestroy(gameObject, _lifeTime);
+            _effect = transform.GetComponentInChildren<VisualEffect>();
+            await Pausable.PausableDestroy(gameObject, _lifeTime);
+            
         }
         void IMissile.InitPhysicsProperties(Transform target, Vector3 initVelocity, float hitTime, float maxAcceleration)
         {
@@ -69,9 +72,19 @@ namespace MFFrameWork
             Debug.Log("hit");
             damageable.Damage(Damage, this.transform);
         }
+        protected override async void BulletDestroy()
+        {
+            enabled = false;
+            _effect.SendEvent("OnStopFlash");
+            _effect?.Stop();
+            while (_effect.aliveParticleCount > 0)
+            {
+                await Awaitable.EndOfFrameAsync();
+            }
+            base.BulletDestroy();
+        }
         protected override void DeathBehavior(float attackPower)
         {
         }
-
     }
 }
