@@ -38,6 +38,10 @@ namespace MFFrameWork
             _maxAccleration = maxAcceleration;
             _position = transform.position;
         }
+        void IMissile.SetTargetVector(UnityEngine.Vector3 vector)
+        {
+            _targetPos = vector;
+        }
 
         void Update()
         {

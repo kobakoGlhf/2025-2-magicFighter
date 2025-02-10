@@ -221,6 +221,7 @@ namespace MFFrameWork
 
     interface IMissile : IBullet
     {
+        void SetTargetVector(Vector3 vector);
         void InitPhysicsProperties(Transform target, Vector3 initVelocity, float hitTime, float maxAcceleration);
     }
 }

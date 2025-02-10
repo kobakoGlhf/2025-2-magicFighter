@@ -14,6 +14,8 @@ namespace MFFrameWork
 
         [SerializeField] int _missileCount;
 
+        [SerializeField] float _nullTargetRange=80;
+
         Vector3 _targetPos;
         private void Start()
         {
@@ -39,6 +41,10 @@ namespace MFFrameWork
                 if (target)
                 {
                     _targetPos = target.position;
+                }
+                else
+                {
+                    bullet.SetTargetVector(transform.forward * _nullTargetRange);
                 }
 
                 Vector3 vec = _targetPos - transform.position;

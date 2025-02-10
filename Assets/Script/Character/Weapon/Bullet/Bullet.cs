@@ -49,7 +49,7 @@ namespace MFFrameWork
         }
         protected virtual void BulletDestroy()
         {
-            Destroy(gameObject);
+            if(this!=null) Destroy(gameObject);
             _tokenSource.Cancel();
         }
         protected abstract void OnHitTrigger(IDamageable damageable);
