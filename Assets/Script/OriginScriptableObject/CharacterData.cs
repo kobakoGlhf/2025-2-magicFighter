@@ -3,7 +3,7 @@ using UnityEngine;
 namespace MFFrameWork
 {
     [CreateAssetMenu(fileName = "CharactorData",menuName = "CharactorData")]
-    public class CharactorData:ScriptableObject
+    public class CharacterData:ScriptableObject
     {
         
     }

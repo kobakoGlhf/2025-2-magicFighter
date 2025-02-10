@@ -13,6 +13,8 @@ namespace MFFrameWork
         [SerializeField] float _hitTime = 2;
 
         [SerializeField] int _missileCount;
+
+        Vector3 _targetPos;
         private void Start()
         {
             if (!_bulletObj.TryGetComponent(out IMissile bullet))
@@ -34,7 +36,12 @@ namespace MFFrameWork
                 IMissile bullet = Instantiate(_bulletObj, _muzzleTransform.position, _muzzleTransform.rotation).GetComponent<IMissile>();
                 bullet.Init(attackPower, gameObject.layer, _lifeTime);
 
-                Vector3 vec = target.position - transform.position;
+                if (target)
+                {
+                    _targetPos = target.position;
+                }
+
+                Vector3 vec = _targetPos - transform.position;
                 var n = Vector3.Cross(vec, Vector3.up);
                 n *= Random.Range(-1f, 1f);
                 n.y += Random.Range(0, 1f) * 10;

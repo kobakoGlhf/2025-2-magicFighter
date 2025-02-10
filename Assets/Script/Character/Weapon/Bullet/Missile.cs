@@ -16,6 +16,7 @@ namespace MFFrameWork
         [SerializeField] float _maxAccleration;
         Vector3 _velocity;
         Vector3 _position;
+        Vector3 _targetPos;
 
         [SerializeField] GameObject _effect;
         public float LifeTime { get => _lifeTime; set => _lifeTime = value; }
@@ -32,15 +33,19 @@ namespace MFFrameWork
             _initialVelocity = initVelocity;
             _period = hitTime;
             _maxAccleration = maxAcceleration;
+            _position = transform.position;
         }
 
         void Update()
         {
             //‰^“®•û’öŽ®‚ðŽg‚Á‚½missile
 
-            var accleration = _initialVelocity;
-
-            var diff = transform.position;
+            Vector3 accleration = _initialVelocity;
+            if(_target)
+            {
+                _targetPos = _target.position;
+            }
+            Vector3 diff = _targetPos - transform.position;
             accleration += (diff - _velocity * _period) * 2 / (_period * _period);
 
             if (accleration.magnitude > _maxAccleration)
@@ -61,11 +66,11 @@ namespace MFFrameWork
 
         protected override void OnHitTrigger(IDamageable damageable)
         {
+            Debug.Log("hit");
             damageable.Damage(Damage, this.transform);
         }
         protected override void DeathBehavior(float attackPower)
         {
-            Debug.Log("‚±‚±‚Å”š”­");
         }
 
     }

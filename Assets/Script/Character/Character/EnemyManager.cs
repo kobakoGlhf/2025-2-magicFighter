@@ -62,20 +62,12 @@ namespace MFFrameWork
         }
         void AttackMode()
         {
-            var toTarget = new Vector2(_targetObj.position.x - transform.position.x, _targetObj.position.z - transform.position.z).normalized;
-            //    Debug.Log("reft");
-            //    var angle = Mathf.Atan2(direction.y, direction.x) + .2f;
-            //    Vector3 circlePosition = new Vector3(
-            //        Mathf.Cos(angle) * direction.magnitude,
-            //        0,  // y座標は変えない
-            //        Mathf.Sin(angle) * direction.magnitude
-            //    );
-            //    Debug.Log($"MovePos:{circlePosition}");
-
-            //    Vector3 directionToCircle = (circlePosition - transform.position).normalized;
-            //    OnMove(new Vector2(circlePosition.x, circlePosition.z));
+            var toTarget = new Vector2(_targetObj.position.x - transform.position.x, _targetObj.position.z - transform.position.z);
             Vector2 finalDirection = (_randomDirection * 0.5f).normalized;
-            OnMove(finalDirection);
+            var n = toTarget * finalDirection;
+            
+
+            OnMove(n);
 
             _timer += Time.deltaTime;
 
@@ -99,5 +91,4 @@ namespace MFFrameWork
         Tracking,
         avoidance
     }
-
 }

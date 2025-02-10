@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace MFFrameWork
 {
-    public class CharactorMove : MonoBehaviour, ICharacterMove
+    public class CharacterMove : MonoBehaviour, ICharacterMove
     {
         [SerializeField] float _slopelimit = 45;
         [SerializeField] float _groundDistans = 0.5f;

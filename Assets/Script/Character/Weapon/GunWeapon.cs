@@ -14,14 +14,12 @@ namespace MFFrameWork
         {
             var bulletObj = Instantiate(_bulletPrefab, _muzzle.position, Quaternion.identity);
 
-            Debug.Log(_target.position);
-
             if(bulletObj.TryGetComponent(out IBullet bullet))
             {
                 bullet.Init(attackPower, this.gameObject.layer, _lifeTime);
             }
-            var direction = (_target.position - _muzzle.position);
-            bulletObj.transform.rotation = Quaternion.LookRotation(_target.position);
+            var direction = (_target.position - _muzzle.position).normalized;
+            bulletObj.transform.forward = direction;
             if (bulletObj.TryGetComponent(out Rigidbody rb))
             {
                 rb.linearVelocity = direction * _speed;

@@ -1,4 +1,3 @@
-
 using MFFrameWork.Utilities;
 using UnityEngine;
 
@@ -11,7 +10,6 @@ namespace MFFrameWork
         {
             damageable.Damage(Damage, this.transform);
         }
-
     }
 
     public abstract class Bullet_B : MonoBehaviour, IBullet
@@ -19,19 +17,17 @@ namespace MFFrameWork
         LayerMask _excludedLayer;
 
         float _damage;
-        protected float Damage { get; set; }
+        protected float Damage { get => _damage ; }
 
         public async void Init(float damage, LayerMask layer, float lifeTime)
         {
             _damage = damage;
             _excludedLayer = layer;
-            Debug.Log(layer);
             await Pausable.PausableDestroy(gameObject, lifeTime);
         }
 
         void OnTriggerEnter(Collider other)
         {
-            Debug.Log(other);
             if (other.gameObject.layer == _excludedLayer ||
                 other.gameObject.layer == gameObject.layer) {  return; }
 
@@ -40,7 +36,6 @@ namespace MFFrameWork
                 OnHitTrigger(damageable);
             }
             DeathBehavior(Damage);
-            Debug.Log("hit");
             Destroy(this.gameObject);
         }
         protected virtual void DeathBehavior(float damage)

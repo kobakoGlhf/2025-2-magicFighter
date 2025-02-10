@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace MFFrameWork
 {
-    public class CharactorAnimation
+    public class CharacterAnimation
     {
         static readonly Dictionary<AnimationKind, string> ClipName = new Dictionary<AnimationKind, string>()
     {

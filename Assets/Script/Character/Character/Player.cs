@@ -6,15 +6,13 @@ using UnityEngine.InputSystem;
 
 namespace MFFrameWork
 {
-
-    [RequireComponent(typeof(Rigidbody), typeof(PlayerInput), typeof(CharactorMove))]
+    [RequireComponent(typeof(Rigidbody), typeof(PlayerInput), typeof(CharacterMove))]
     public class Player : Character_B
     {
         PlayerInput _playerInput;
         public override void Start_S()
         {
             _playerInput = GetComponent<PlayerInput>();
-
 
             _playerInput.actions["Move"].performed += x => OnMove(x.ReadValue<Vector2>());
             _playerInput.actions["Move"].canceled += x => CancelMove();
@@ -36,7 +34,7 @@ namespace MFFrameWork
         }
     }
 
-    [RequireComponent(typeof(Rigidbody), typeof(PlayerInput), typeof(CharactorMove))]
+    [RequireComponent(typeof(Rigidbody), typeof(PlayerInput), typeof(CharacterMove))]
     public abstract class Character_B : MonoBehaviour, IDamageable
     {
         [SerializeField] protected ICharacterMove _playerMove;
@@ -44,7 +42,7 @@ namespace MFFrameWork
         [SerializeField] Weapon_B _mainAttack;
         [SerializeField] Weapon_B _subAttack;
         [SerializeField] Weapon_B _skillAttack;
-        protected CharactorAnimation _charactorAnimation = new();
+        protected CharacterAnimation _charactorAnimation = new();
         protected Rigidbody _rb;
         protected bool _attackCancel;
         protected Vector3 _moveDirection;
@@ -52,9 +50,23 @@ namespace MFFrameWork
 
         [SerializeField] Status _status;
         protected int _currentHealth = 10;
+        public int CurrentHealth
+        {
+            get => _currentHealth; set
+            {
+                Debug.Log($"HP:{_currentHealth}");
+                if (_currentHealth != value)
+                {
+                    _currentHealth = value;
+                    OnChangeHealth?.Invoke(_currentHealth, _status.MaxHealth);
+                }
+            }
+        }
         bool _isInvincible;
 
         CancellationTokenSource _attackCancelToken = new();
+
+        public Action<float, float> OnChangeHealth;
         protected int AttackPower { get => _status.AttackPower; }
         private void Start()
         {
@@ -64,8 +76,8 @@ namespace MFFrameWork
 
 
             //パラメーターの初期化
-            _currentHealth = _status.MaxHealth;
-            if (_currentHealth <= 0)
+            CurrentHealth = _status.MaxHealth;
+            if (CurrentHealth <= 0)
             {
                 DeathBehavior();
             }
@@ -85,14 +97,17 @@ namespace MFFrameWork
             Fixed_S();
         }
         public virtual void Fixed_S() { }
-        int IDamageable.HitPoint { get => _currentHealth; }
+        int IDamageable.HitPoint { get => CurrentHealth; }
         void IDamageable.Damage(float damage, Transform hitObjTransform)
         {
-            _currentHealth -= (int)damage;
-            if (_currentHealth <= 0)
+            if (CurrentHealth <= 0)
             {
-                _currentHealth = 0;
+                CurrentHealth = 0;
                 DeathBehavior();
+            }
+            else
+            {
+                CurrentHealth -= (int)damage;
             }
         }
 
@@ -206,6 +221,6 @@ namespace MFFrameWork
 
     interface IMissile : IBullet
     {
-        void InitPhysicsProperties(Transform target,Vector3 initVelocity, float hitTime, float maxAcceleration);
+        void InitPhysicsProperties(Transform target, Vector3 initVelocity, float hitTime, float maxAcceleration);
     }
 }
