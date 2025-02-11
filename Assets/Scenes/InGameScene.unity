@@ -1031,6 +1031,7 @@ GameObject:
   - component: {fileID: 320751456}
   - component: {fileID: 320751450}
   - component: {fileID: 320751452}
+  - component: {fileID: 320751457}
   - component: {fileID: 320751454}
   m_Layer: 3
   m_Name: Player
@@ -1151,7 +1152,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _originTransform: {fileID: 330585546}
   _mainAttack: {fileID: 320751456}
-  _subAttack: {fileID: 0}
+  _subAttack: {fileID: 320751457}
   _skillAttack: {fileID: 320751455}
   _status:
     _maxHealth: 100
@@ -1263,6 +1264,24 @@ MonoBehaviour:
   _speed: 50
   _lifeTime: 10
   _nullTargetRange: 80
+--- !u!114 &320751457
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 320751440}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 50690f83075726c4abd1f2741eab2097, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _useStopTime: 0.5
+  _weaponCoolTime: 0
+  _trackEndDirection: 1
+  _maxTrackingTime: 10
+  _speed: 100
+  _animationStopTime: 0
 --- !u!1 &330585543
 GameObject:
   m_ObjectHideFlags: 0
@@ -3036,7 +3055,7 @@ MonoBehaviour:
   _currentStamina: 0
   _dushStamina: 0
   _staminaRegeneration: 1
-  _targetObj: {fileID: 320751448}
+  _targetObj: {fileID: 26009508}
   _modeChangeDistanse: 30
   _time: 2
   _randomLeftMove: 10
@@ -3056,9 +3075,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _useStopTime: 0.5
   _weaponCoolTime: 1
-  _muzzle: {fileID: 630286555}
+  _muzzle: {fileID: 1167344106}
   _bulletPrefab: {fileID: 7910334992373346694, guid: 8f4ec864ce21bdc4db4e6b75f5991fbc, type: 3}
-  _speed: 30
+  _speed: 80
   _lifeTime: 10
   _nullTargetRange: 80
 --- !u!4 &654835583 stripped
@@ -6298,7 +6317,7 @@ Transform:
   m_GameObject: {fileID: 2069652346}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.398, y: 1.4, z: -0.188}
+  m_LocalPosition: {x: -0.398, y: 1.41, z: 0.517}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
