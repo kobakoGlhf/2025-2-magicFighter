@@ -65,6 +65,7 @@ namespace MFFrameWork
         public Action<float, float> OnChangeHealth;
         public Action<Transform> OnChangeTarget;
         public Action<float, float> OnChangeStamina;
+        public event Action OnDestory;
 
         protected int AttackPower { get => _status.AttackPower; }
         public Transform TargetTransform
@@ -173,6 +174,7 @@ namespace MFFrameWork
 
         public void DeathBehavior()
         {
+            OnDestory?.Invoke();
             Destroy(gameObject);
         }
         #region Action

@@ -30,7 +30,7 @@ namespace MFFrameWork
         {
 
         }
-        protected override void Attack(Transform target, float attackPower, CancellationToken token)
+        protected override void Attack(Transform target, float attackPower, CancellationToken token, System.Action action = null)
         {
             if (_bulletObj == null) Debug.Log("AttackObject is null");
             for (var i = 0; i < _missileCount; i++)

@@ -6,7 +6,7 @@ namespace MFFrameWork
     {
         Player _player;
 
-        EnemyManager _enemy = new();
+        Transform _enemy;
 
         [SerializeField]
         Vector3 _lockOnFov = new Vector3(.6f, .4f, 1f);
@@ -14,7 +14,7 @@ namespace MFFrameWork
         // Start is called once before the first execution of Update after the MonoBehaviour is created
         void Start()
         {
-            _enemy = FindFirstObjectByType<EnemyManager>();
+            _enemy = FindFirstObjectByType<EnemyManager>().transform.Find("LockOnPos");
             _player = FindFirstObjectByType<Player>();
         }
 

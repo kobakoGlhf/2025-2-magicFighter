@@ -31,7 +31,6 @@ namespace MFFrameWork.MFSystem
 
         public void LoadScene(SceneKind sceneKind)
         {
-            SceneLoader.LoadScene(sceneKind);
             if (sceneKind == SceneKind.InGame)
             {
                 HideCursor(true);
@@ -40,6 +39,7 @@ namespace MFFrameWork.MFSystem
             {
                 HideCursor(false);
             }
+            SceneLoader.LoadScene(sceneKind);
         }
 
         public void Pause(bool isPause)
@@ -57,7 +57,6 @@ namespace MFFrameWork.MFSystem
         }
         void HideCursor(bool frag)
         {
-            Cursor.visible = frag;
             if (!frag)
                 Cursor.lockState = CursorLockMode.None;
             else

@@ -137,6 +137,7 @@ namespace MFFrameWork
         {
             _lookPos = lookPos - transform.position;
             _attackLookTimer = time;
+            _isDisableMove = true;
         }
 
         void IMove.Move(Vector3 moveDirection, Action<Vector2> action)//ToDo:HERE@Raycast‚ğSphereChast‚É•ÏX‚µ‚½‚¢ ‰ğŒˆ

@@ -24,6 +24,6 @@ namespace MFFrameWork
             }
         }
 
-        protected abstract void Attack(Transform _targetPos, float attackPower, CancellationToken token);
+        protected abstract void Attack(Transform target, float attackPower, CancellationToken token, Action action = null);
     }
 }

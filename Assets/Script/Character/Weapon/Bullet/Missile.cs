@@ -9,7 +9,7 @@ namespace MFFrameWork
     {
         [SerializeField] Transform _target;
         [SerializeField] float _speed;
-        [SerializeField] float _lifeTime=10;
+        [SerializeField] float _lifeTime = 10;
 
         [Space]
         [SerializeField] Vector3 _initialVelocity;
@@ -28,13 +28,13 @@ namespace MFFrameWork
             _rb = GetComponent<Rigidbody>();
             _effect = transform.GetComponentInChildren<VisualEffect>();
             await Pausable.PausableDestroy(gameObject, _lifeTime);
-            
+
         }
         void IMissile.InitPhysicsProperties(Transform target, Vector3 initVelocity, float hitTime, float maxAcceleration)
         {
             _target = target;
             _initialVelocity = initVelocity;
-            _period = hitTime + Random.Range(-1,1f);
+            _period = hitTime + Random.Range(-1, 1f);
             _maxAccleration = maxAcceleration;
             _position = transform.position;
         }
@@ -48,7 +48,7 @@ namespace MFFrameWork
             //‰^“®•û’öŽ®‚ðŽg‚Á‚½missile
 
             Vector3 accleration = _initialVelocity;
-            if(_target)
+            if (_target)
             {
                 _targetPos = _target.position;
             }
@@ -78,14 +78,18 @@ namespace MFFrameWork
         }
         protected override async void BulletDestroy()
         {
-            enabled = false;
-            _effect.SendEvent("OnStopFlash");
-            _effect?.Stop();
-            while (_effect?.aliveParticleCount > 0)
+            try
             {
-                await Awaitable.EndOfFrameAsync();
+                enabled = false;
+                _effect.SendEvent("OnStopFlash");
+                _effect?.Stop();
+                while (_effect?.aliveParticleCount > 0)
+                {
+                    await Awaitable.EndOfFrameAsync();
+                }
+                base.BulletDestroy();
             }
-            base.BulletDestroy();
+            catch { }
         }
         protected override void DeathBehavior(float attackPower)
         {

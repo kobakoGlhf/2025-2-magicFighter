@@ -28,46 +28,22 @@ namespace MFFrameWork
             _characterMove.LockTarget = _targetObj;
             OnLookTarget();
             _characterMove.MoveSpeed *= 0.5f;
-            ChangeRandomDirection();
+            ChangeRandomDirection(); 
+            OnMove(new Vector2(_randomDirection.x,_randomDirection.z));
         }
-        void EnemyLogicChange()
-        {
-            if (!_targetObj) _state = EnemyState.Idol;
-            else if ((_targetObj.position - transform.position).sqrMagnitude > _modeChangeDistanse * _modeChangeDistanse)
-            {
-                _state = EnemyState.Tracking;
-                _characterMove.MoveSpeed *= 10f;
-            }
-            else
-            {
-                _characterMove.MoveSpeed *= 0.1f;
-                _state = EnemyState.Attack;
-            }
-        }
-
         public void Update()
         {
-            switch (_state)
-            {
-                case EnemyState.Tracking:
-                    TrackMode();
-                    break;
-                case EnemyState.Attack:
-                    AttackMode();
-                    break;
-                default:
-                    break;
-            }
+            AttackMode();
 
-
-            _timer += Time.deltaTime;
-            if (_timer > 1.2f)
+            if (_timer + 1.2f < Time.time)
             {
                 Debug.Log("------");
-                _timer = 0;
+                _timer = Time.time;
                 ChangeRandomDirection();
                 OnAttack();
             }
+
+
         }
         void TrackMode()
         {
@@ -86,7 +62,7 @@ namespace MFFrameWork
             var moveVec = _randomDirection;
 
             moveVec.z = toTarget.magnitude - _targetDistans * 0.1f;
-            var moveDic = Quaternion.LookRotation(toTarget) * moveVec ;
+            var moveDic = Quaternion.LookRotation(toTarget) * moveVec;
 
             OnMove(new Vector2(moveDic.x, moveDic.z));
 
