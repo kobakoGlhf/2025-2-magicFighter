@@ -25,19 +25,20 @@ namespace MFFrameWork
         [SerializeField] float _landingDelayTime;
         [SerializeField] float _landingPower;
 
+        [Space]
+        [SerializeField] int _fryJumpCount;
+        int _jumpCount;
+
         Rigidbody _rb;
         bool _isGround;
         bool _isDisableMove = true;
 
         CapsuleCollider _capsuleCollider;
         Transform _toRotate;
-        Transform _target;
 
         CancellationTokenSource _destoryTokenSouce = new();
 
         public event Action<bool> OnGroundChanged;
-
-        public Transform Target { get => _target; set => _target = value; }
         public float MoveSpeed { get => _moveSpeed; set => _moveSpeed = value; }
         public float JumpPower { get => _jumpPower; set => _jumpPower = value; }
         public float DushSpeed { get => _dushSpeed; set => _dushSpeed = value; }
@@ -59,6 +60,20 @@ namespace MFFrameWork
                 }
             }
         }
+        Transform _lookTarget;
+        Vector3 _lookPos;
+        Vector3 _moveVector;
+        bool _isLooked;
+        bool _isAttack;
+        float _attackLookTimer;
+        public Transform LockTarget
+        {
+            get => _lookTarget; set
+            {
+                _lookTarget = value;
+                _isLooked = _lookTarget;
+            }
+        }
 
 
 
@@ -78,13 +93,53 @@ namespace MFFrameWork
         {
             Debug.DrawRay(transform.position, Vector3.down * _groundDistans, Color.blue);
             GroundCheck();
+            LookRotation();
+
+            if (IsGround)
+            {
+                _jumpCount = _fryJumpCount;
+            }
+
+            if (_attackLookTimer > 0)
+            {
+                _isAttack = true;
+                _attackLookTimer -= Time.deltaTime;
+            }
+            else
+            {
+                _isAttack = false;
+            }
+
         }
         private void OnDisable()
         {
             _destoryTokenSouce.Cancel();
         }
 
-        void IMove.Move(Vector3 moveDirection, Action action)//ToDo:HERE　RaycastをSphereChastに変更したい 解決
+        void LookRotation()
+        {
+            Quaternion targetRotation = default;
+            //characterの向き変更
+            if (!_isLooked)
+            {
+                targetRotation = _isAttack ? Quaternion.LookRotation(Vector3.Scale(_lookPos, new Vector3(1, 0, 1))) :
+                    _moveVector.sqrMagnitude != 0 ? Quaternion.LookRotation(Vector3.Scale(_moveVector, new Vector3(1, 0, 1))) : default;
+
+            }
+            else if (_lookTarget)
+            {
+                targetRotation = Quaternion.LookRotation(Vector3.Scale(_lookTarget.position - transform.position, new Vector3(1, 0, 1)));
+            }
+            if (targetRotation != default)
+                transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * _rotateSpeed);
+        }
+        public void OnAttacked(float time, Vector3 lookPos)
+        {
+            _lookPos = lookPos - transform.position;
+            _attackLookTimer = time;
+        }
+
+        void IMove.Move(Vector3 moveDirection, Action<Vector2> action)//ToDo:HERE　RaycastをSphereChastに変更したい 解決
         {
             Debug.DrawRay(transform.position, moveDirection, Color.green);
             if (!_isDisableMove) return;
@@ -101,25 +156,31 @@ namespace MFFrameWork
                 _rb.linearVelocity = _rb.linearVelocity.normalized * _moveSpeed;
             }
 
-            //characterの向き変更
-            if (moveDirection != Vector3.zero)
-            {
-                Quaternion targetRotation = Target == null ?
-                    Quaternion.LookRotation(moveDirection) :
-                    Quaternion.LookRotation(Target.position - transform.position);
-                transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * _rotateSpeed);
-            }
+            _moveVector = moveVector.normalized;
 
-            action?.Invoke();
+            if (_lookTarget)
+            {
+                Vector3 rotateDirection = Quaternion.LookRotation(_lookTarget.position - transform.position) * moveDirection;
+
+                action?.Invoke(new Vector2(transform.forward.x, transform.forward.z));
+            }
         }
         void IJump.Jump(Action action)
         {
-            if (!_isDisableMove || !IsGround) return;
-            _rb.linearVelocity = Vector3.Scale(_rb.linearVelocity, new Vector3(1, 0, 1));
-            _rb.AddForce(Vector3.up * _jumpPower, ForceMode.Impulse);
-            action?.Invoke();
+            if (!_isDisableMove) return;
+            else if (_jumpCount != 0)
+            {
+                _jumpCount--;
+                _rb.linearVelocity = Vector3.Scale(_rb.linearVelocity, new Vector3(1, 0, 1));
+                _rb.AddForce(Vector3.up * _jumpPower, ForceMode.Impulse);
+            }
+
+            if (_isGround)
+            {
+                action?.Invoke();
+            }
         }
-        async void IDush.Dush(Vector3 moveDirection, Action animationAction)
+        async void IDush.Dush(Vector3 moveDirection, Action animationAction, Action end)
         {
             if (!_isDisableMove || moveDirection.sqrMagnitude == 0) return;
 
@@ -134,7 +195,7 @@ namespace MFFrameWork
 
             animationAction?.Invoke();
 
-            UncontrollableSeconds(_dushCoolTime);
+            UncontrollableSeconds(_dushCoolTime, end);
         }
         /// <summary>
         /// worldの-y方向にrayを飛ばす。
@@ -160,16 +221,18 @@ namespace MFFrameWork
             return hit;
         }
 
+
         /// <summary>
         /// クールタイム分操作不能にする
         /// </summary>
         /// <param name="seconds"></param>
-        public async Task UncontrollableSeconds(float seconds)
+        public async Task UncontrollableSeconds(float seconds, Action end = null)
         {
             Debug.Log("Uncontrolle");
             _isDisableMove = false;
             await Pausable.PausableWaitForSeconds(seconds, _destoryTokenSouce.Token);
             _isDisableMove = true;
+            end?.Invoke();
             Debug.Log("controlle");
         }
     }

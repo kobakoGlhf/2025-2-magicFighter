@@ -1,5 +1,3 @@
-using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 namespace MFFrameWork
@@ -8,7 +6,7 @@ namespace MFFrameWork
     {
         Player _player;
 
-        List<EnemyManager> _enemyManager = new();
+        EnemyManager _enemy = new();
 
         [SerializeField]
         Vector3 _lockOnFov = new Vector3(.6f, .4f, 1f);
@@ -16,29 +14,22 @@ namespace MFFrameWork
         // Start is called once before the first execution of Update after the MonoBehaviour is created
         void Start()
         {
-            _enemyManager = FindObjectsByType<EnemyManager>(FindObjectsSortMode.None).ToList();
+            _enemy = FindFirstObjectByType<EnemyManager>();
             _player = FindFirstObjectByType<Player>();
         }
 
         // Update is called once per frame
-        void FixedUpdate()//ToDo:HERE åªç›ìGÇ™1ëÃÇµÇ©Ç¢Ç»Ç¢ÇΩÇﬂìKìñÇ≈Ç∑
+        void LateUpdate()//ToDo:HERE åªç›ìGÇ™1ëÃÇµÇ©Ç¢Ç»Ç¢ÇΩÇﬂìKìñÇ≈Ç∑
         {
-            foreach (var obj in _enemyManager)
+
+            if (_enemy && CheckDirectionRange(_enemy.transform))
             {
-                if (!obj)
-                {
-                    _enemyManager.Remove(obj);
-                }
-                else if (CheckDirectionRange(obj.transform))
-                {
-                    _player.TargetTransform = obj.transform;
-                    break;
-                }
-                else
-                {
-                    _player.TargetTransform = null;
-                    break;
-                }
+                _player.TargetTransform = _enemy.transform;
+
+            }
+            else
+            {
+                _player.TargetTransform = null;
             }
         }
         bool CheckDirectionRange(Transform target)
@@ -50,6 +41,7 @@ namespace MFFrameWork
             Vector3 minCross = Vector3.Cross(direction, fovmin);
             Vector3 maxCross = Vector3.Cross(direction, fovmax);
 
+            float dot = Vector3.Dot(direction.normalized, transform.forward);
 
             var n = Vector3.Scale(minCross, maxCross);
 
@@ -59,7 +51,7 @@ namespace MFFrameWork
             Debug.DrawLine(transform.position, transform.rotation * Vector3.Scale(_lockOnFov, new Vector3(1, -1, 1)) * 60, Color.green);
             Debug.DrawLine(transform.position, transform.rotation * Vector3.Scale(_lockOnFov, new Vector3(-1, -1, 1)) * 60, Color.green);
 
-            return n.x < 0 && n.y < 0;
+            return n.x < 0 && n.y < 0 && dot >= 0;
         }
 
     }

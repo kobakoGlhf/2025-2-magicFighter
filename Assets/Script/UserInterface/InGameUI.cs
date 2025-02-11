@@ -14,10 +14,9 @@ namespace MFFrameWork
         [SerializeField]
         RectTransform _canvas;
 
-        [SerializeField]
-        Slider _playerHpbar;
-        [SerializeField]
-        Slider _enemyHpbar;
+        [SerializeField] Slider _playerHpbar;
+        [SerializeField] Slider _enemyHpbar;
+        [SerializeField] Slider _playerStaminaBar;
 
         [SerializeField]
         Image _lockOnCursor;
@@ -32,6 +31,7 @@ namespace MFFrameWork
             _enemy.OnChangeHealth += (x, y) => ChangeSlider(_enemyHpbar, x, y);
 
             _player.OnChangeTarget += x => _lockOnTarget = x;
+            _player.OnChangeStamina += (x, y) => ChangeSlider(_playerStaminaBar, x, y);
         }
 
         private void Update()

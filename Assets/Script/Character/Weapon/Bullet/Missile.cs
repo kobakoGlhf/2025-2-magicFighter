@@ -34,7 +34,7 @@ namespace MFFrameWork
         {
             _target = target;
             _initialVelocity = initVelocity;
-            _period = hitTime;
+            _period = hitTime + Random.Range(-1,1f);
             _maxAccleration = maxAcceleration;
             _position = transform.position;
         }
@@ -81,7 +81,7 @@ namespace MFFrameWork
             enabled = false;
             _effect.SendEvent("OnStopFlash");
             _effect?.Stop();
-            while (_effect.aliveParticleCount > 0)
+            while (_effect?.aliveParticleCount > 0)
             {
                 await Awaitable.EndOfFrameAsync();
             }

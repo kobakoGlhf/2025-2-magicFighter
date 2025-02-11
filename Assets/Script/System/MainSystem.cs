@@ -1,6 +1,7 @@
 using MFFrameWork.Utilities;
 using System;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 namespace MFFrameWork.MFSystem
 {
@@ -21,6 +22,11 @@ namespace MFFrameWork.MFSystem
         {
             Audio = transform.GetComponentInChildren<AudioManager>();
             if (!Audio) Debug.Log("Audio is null");
+
+            if (SceneManager.GetActiveScene().name == SceneLoader.SceneData[SceneKind.InGame])
+            {
+                HideCursor(true);
+            }
         }
 
         public void LoadScene(SceneKind sceneKind)

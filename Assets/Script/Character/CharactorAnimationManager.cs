@@ -6,20 +6,23 @@ namespace MFFrameWork
     public class CharacterAnimation
     {
         static readonly Dictionary<AnimationKind, string> ClipName = new Dictionary<AnimationKind, string>()
-    {
-        {AnimationKind.Move, "Move" },
-        {AnimationKind.Jump, "Jump" },
-        {AnimationKind.Attack, "Attack" }
-    };
+        {
+            {AnimationKind.Move, "Move" },
+            {AnimationKind.Jump, "Jump" },
+            {AnimationKind.Attack, "Attack" }
+        };
         static readonly Dictionary<AnimationPropertys, string> PropertysName = new Dictionary<AnimationPropertys, string>()
-    {
-        {AnimationPropertys.MoveSpeed,"MoveSpeed" },
-        {AnimationPropertys.IsGround, "IsGround" },
-        {AnimationPropertys.AttackTrigger,"AttackTrigger" },
-        {AnimationPropertys.DamageTrigger,"DamageTrigger" },
-        {AnimationPropertys.JumpTrigger,"JumpTrigger" },
-        {AnimationPropertys.DushTrigger,"DushTrigger" },
-    };
+        {
+            {AnimationPropertys.MoveSpeed,"MoveSpeed" },
+            {AnimationPropertys.MoveX, "MoveX" },
+            {AnimationPropertys.MoveY, "MoveY" },
+            {AnimationPropertys.IsGround, "IsGround" },
+            {AnimationPropertys.AttackTrigger,"AttackTrigger" },
+            {AnimationPropertys.DamageTrigger,"DamageTrigger" },
+            {AnimationPropertys.JumpTrigger,"JumpTrigger" },
+            {AnimationPropertys.DushTrigger,"DushTrigger" },
+            {AnimationPropertys.IsLookMode, "IsLook" }
+        };
 
         Animator _animator;
         public void SetAnimator(Animator animator) => _animator = animator;
@@ -69,7 +72,11 @@ namespace MFFrameWork
     public enum AnimationPropertys
     {
         MoveSpeed,
+        MoveX,
+        MoveY,
+
         IsGround,
+        IsLookMode,
 
         AttackTrigger,
         DamageTrigger,

@@ -21,6 +21,7 @@ namespace MFFrameWork
             _playerInput.actions["MainAttack"].started += x => OnAttack();
             _playerInput.actions["SubAttack"].started += x => OnSubAttack();
             _playerInput.actions["SkillAttack"].started += x => OnSkillAttack();
+            _playerInput.actions["LookOn"].started += x => OnLookTarget();
         }
         private void OnDisable()
         {
@@ -31,13 +32,14 @@ namespace MFFrameWork
             _playerInput.actions["MainAttack"].started -= x => OnAttack();
             _playerInput.actions["SubAttack"].started -= x => OnSubAttack();
             _playerInput.actions["SkillAttack"].started -= x => OnSkillAttack();
+            _playerInput.actions["LookOn"].started -= x => OnLookTarget();
         }
     }
 
     [RequireComponent(typeof(Rigidbody), typeof(PlayerInput), typeof(CharacterMove))]
     public abstract class Character_B : MonoBehaviour, IDamageable
     {
-        [SerializeField] protected ICharacterMove _playerMove;
+        [SerializeField] protected ICharacterMove _characterMove;
         [SerializeField] protected Transform _originTransform;
         [SerializeField] Weapon_B _mainAttack;
         [SerializeField] Weapon_B _subAttack;
@@ -48,14 +50,21 @@ namespace MFFrameWork
         protected Vector3 _moveDirection;
         private Transform _targetTransform;
         CancellationTokenSource _attackCancelToken = new();
+        bool _isLookTarget;
 
-        [SerializeField] Status _status;
+        [SerializeField] public Status _status;
         protected int _currentHealth = 10;
         bool _isInvincible;
+
+        [SerializeField] float _currentStamina;
+        [SerializeField] float _dushStamina = 60;
+        [SerializeField, Tooltip("1秒ごとに*50回復(fixed)")] float _staminaRegeneration = 1;
+        bool _isStaminaRegene = true;
 
 
         public Action<float, float> OnChangeHealth;
         public Action<Transform> OnChangeTarget;
+        public Action<float, float> OnChangeStamina;
 
         protected int AttackPower { get => _status.AttackPower; }
         public Transform TargetTransform
@@ -68,6 +77,10 @@ namespace MFFrameWork
                     _targetTransform = value;
                     OnChangeTarget?.Invoke(_targetTransform);
                     Debug.Log("TargetName : " + (_targetTransform is not null ? _targetTransform.name : "is null"));
+                    if (_targetTransform is null)
+                    {
+                        RemoveLookTarget();
+                    }
                 }
             }
         }
@@ -83,32 +96,59 @@ namespace MFFrameWork
                 }
             }
         }
+
+        public float CurrentStamina
+        {
+            get => _currentStamina;
+            set
+            {
+                if (_currentStamina != value)
+                {
+                    _currentStamina = value;
+                    OnChangeStamina?.Invoke(_currentStamina, _status.Stamina);
+                }
+            }
+        }
+
         private void Start()
         {
             _rb = GetComponent<Rigidbody>();
-            _playerMove = GetComponent<ICharacterMove>();
+            _characterMove = GetComponent<ICharacterMove>();
             _charactorAnimation.SetAnimator(GetComponent<Animator>());//ToDo:HERE　コンストラクタで代入するように変更したい
 
 
             //パラメーターの初期化
-            CurrentHealth = _status.MaxHealth;
+            CurrentHealth = _status.MaxHealth; _currentStamina = _status.Stamina;
             if (CurrentHealth <= 0)
             {
                 DeathBehavior();
             }
 
-            _playerMove.OnGroundChanged += x => _charactorAnimation.SetBool(AnimationPropertys.IsGround, x);
+            _characterMove.OnGroundChanged += x => _charactorAnimation.SetBool(AnimationPropertys.IsGround, x);
 
-            _playerMove.Init();
+            if (_mainAttack) _mainAttack.OnAttacked += _characterMove.OnAttacked;
+            if (_skillAttack) _skillAttack.OnAttacked += _characterMove.OnAttacked;
+            if (_subAttack) _subAttack.OnAttacked += _characterMove.OnAttacked;
+
+            _characterMove.Init();
             Start_S();
         }
         public virtual void Start_S() { }
 
         void FixedUpdate()
         {
-            _playerMove?.Move(_moveDirection, () => _charactorAnimation.SetFloat(
+            _characterMove?.Move(_moveDirection, vector =>
+            {
+                _charactorAnimation.SetFloat(AnimationPropertys.MoveX, _moveDirection.x);
+                _charactorAnimation.SetFloat(AnimationPropertys.MoveY, _moveDirection.z);
+            });
+            _charactorAnimation.SetFloat(
                 AnimationPropertys.MoveSpeed,
-                Vector3.Scale(_playerMove.Velocity, new Vector3(1, 0, 1)).magnitude));
+                Vector3.Scale(_characterMove.Velocity, new Vector3(1, 0, 1)).magnitude);
+
+            if (_status.Stamina >= _currentStamina && _isStaminaRegene)
+                CurrentStamina += _staminaRegeneration;
+
             Fixed_S();
         }
         public virtual void Fixed_S() { }
@@ -135,28 +175,34 @@ namespace MFFrameWork
         {
             Destroy(gameObject);
         }
-        #region Move
+        #region Action
         protected void OnMove(Vector2 moveDirection)
         {
-            if ((_playerMove is null).ChackLog("move is null")) return;
+            if ((_characterMove is null).ChackLog("move is null")) return;
             //var cameraRotationY = Quaternion.Euler(0, _originTransform.transform.rotation.eulerAngles.y, 0);
             //_moveDirection = cameraRotationY * new Vector3(moveDirection.x, 0, moveDirection.y).normalized;
             _moveDirection = new Vector3(moveDirection.x, 0, moveDirection.y).normalized;
         }
         protected void CancelMove()
         {
-            if ((_playerMove is null).ChackLog("move is null")) return;
+            if ((_characterMove is null).ChackLog("move is null")) return;
             _moveDirection = Vector3.zero;
         }
         protected void OnJump()
         {
-            if ((_playerMove is null).ChackLog("jump is null")) return;
-            _playerMove.Jump(() => _charactorAnimation.SetTrigger(AnimationPropertys.JumpTrigger));
+            if ((_characterMove is null).ChackLog("jump is null")) return;
+            _characterMove.Jump(() => _charactorAnimation.SetTrigger(AnimationPropertys.JumpTrigger));
         }
         protected void OnDush()
         {
-            if ((_playerMove is null).ChackLog("dush is null")) return;
-            _playerMove.Dush(_moveDirection, () => _charactorAnimation.SetTrigger(AnimationPropertys.DushTrigger));
+            if ((_characterMove is null).ChackLog("dush is null")) return;
+            else if (CurrentStamina > _dushStamina)
+            {
+                _isStaminaRegene = false;
+                _characterMove.Dush(_moveDirection, () => _charactorAnimation.SetTrigger(AnimationPropertys.DushTrigger),
+                    () => _isStaminaRegene = true);
+                CurrentStamina -= _dushStamina;
+            }
         }
         protected void OnAttack()
         {
@@ -175,6 +221,28 @@ namespace MFFrameWork
             if ((_skillAttack is null).ChackLog("Attack is null")) return;
             _skillAttack.OnAttack(_targetTransform, AttackPower, _attackCancelToken.Token);
         }
+
+        protected void OnLookTarget()
+        {
+            if (_targetTransform && !_isLookTarget)
+            {
+                _characterMove.LockTarget = _targetTransform;
+                _isLookTarget = true;
+                _charactorAnimation.SetBool(AnimationPropertys.IsLookMode, true);
+            }
+            else if (_isLookTarget)
+            {
+                Debug.Log("LookCancel");
+                _isLookTarget = false;
+                _characterMove.LockTarget = null;
+                _charactorAnimation.SetBool(AnimationPropertys.IsLookMode, false);
+            }
+        }
+        protected void RemoveLookTarget()
+        {
+            _characterMove.LockTarget = null;
+            _charactorAnimation.SetBool(AnimationPropertys.IsLookMode, false);
+        }
         #endregion
 
     }
@@ -184,28 +252,32 @@ namespace MFFrameWork
         [SerializeField] int _maxHealth;
         [SerializeField] int _attackPower;
         [SerializeField] float _invincibleTime;
-        public int MaxHealth { get => _maxHealth; }
-        public int AttackPower { get => _attackPower; }
-        public float InvincibleTime { get => _invincibleTime; }
-        Status(int maxHealth, int attackPower, float invincibleTime)
+        [SerializeField] float _stamina;
+        public int MaxHealth { get => _maxHealth; set => _maxHealth = value; }
+        public int AttackPower { get => _attackPower; set => _attackPower = value; }
+        public float InvincibleTime { get => _invincibleTime; set => _invincibleTime = value; }
+        public float Stamina { get => _stamina; set => _stamina = value; }
+        Status(int maxHealth, int attackPower, float invincibleTime, float stamina)
         {
             _maxHealth = maxHealth;
             _attackPower = attackPower;
             _invincibleTime = invincibleTime;
+            _stamina = stamina;
         }
     }
     public interface ICharacterMove : IMove, IJump, IDush
     {
         bool IsGround { get; }
         event Action<bool> OnGroundChanged;
-        Transform Target { get; set; }
+        void OnAttacked(float time, Vector3 target);
+        Transform LockTarget { get; set; }
         void Init();
     }
     public interface IMove
     {
         Vector3 Velocity { get; }
         float MoveSpeed { get; set; }
-        void Move(Vector3 moveDirection, Action action = null);
+        void Move(Vector3 moveDirection, Action<Vector2> action = null);
     }
     public interface IJump
     {
@@ -215,7 +287,7 @@ namespace MFFrameWork
     public interface IDush
     {
         float DushSpeed { get; set; }
-        void Dush(Vector3 moveDirection, Action animatorAction = null);
+        void Dush(Vector3 moveDirection, Action animatorAction = null, Action dushEndAction = null);
     }
     public interface IAttack
     {
@@ -239,4 +311,5 @@ namespace MFFrameWork
         void SetTargetVector(Vector3 vector);
         void InitPhysicsProperties(Transform target, Vector3 initVelocity, float hitTime, float maxAcceleration);
     }
+
 }

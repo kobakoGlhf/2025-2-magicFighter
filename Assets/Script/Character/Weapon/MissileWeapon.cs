@@ -40,10 +40,12 @@ namespace MFFrameWork
 
                 if (target)
                 {
+                    OnAttacked?.Invoke(_useStopTime, target.position);
                     _targetPos = target.position;
                 }
                 else
                 {
+                    OnAttacked?.Invoke(_useStopTime, transform.forward * _nullTargetRange);
                     bullet.SetTargetVector(transform.forward * _nullTargetRange);
                 }
 

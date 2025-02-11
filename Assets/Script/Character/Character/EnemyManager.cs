@@ -9,6 +9,7 @@ namespace MFFrameWork
         [SerializeField] Transform _targetObj;
         [SerializeField] float _modeChangeDistanse;
         [SerializeField] float _time;//刈り
+        [SerializeField] float _randomLeftMove;
 
         [SerializeField] EnemyState _testState;
 
@@ -16,13 +17,18 @@ namespace MFFrameWork
         EnemyState _state;
 
 
+        [SerializeField, Tooltip("Enemyはこの距離を保とうとします。")] float _targetDistans;
+
         float _timer;
-        Vector2 _randomDirection;
+        Vector3 _randomDirection;
         public override void Start_S()
         {
             _state = _testState;
-            _playerMove.Target = _targetObj;
-            _playerMove.MoveSpeed *= 0.5f;
+            TargetTransform = _targetObj;
+            _characterMove.LockTarget = _targetObj;
+            OnLookTarget();
+            _characterMove.MoveSpeed *= 0.5f;
+            ChangeRandomDirection();
         }
         void EnemyLogicChange()
         {
@@ -30,11 +36,11 @@ namespace MFFrameWork
             else if ((_targetObj.position - transform.position).sqrMagnitude > _modeChangeDistanse * _modeChangeDistanse)
             {
                 _state = EnemyState.Tracking;
-                _playerMove.MoveSpeed *= 10f;
+                _characterMove.MoveSpeed *= 10f;
             }
             else
             {
-                _playerMove.MoveSpeed *= 0.1f;
+                _characterMove.MoveSpeed *= 0.1f;
                 _state = EnemyState.Attack;
             }
         }
@@ -52,6 +58,16 @@ namespace MFFrameWork
                 default:
                     break;
             }
+
+
+            _timer += Time.deltaTime;
+            if (_timer > 1.2f)
+            {
+                Debug.Log("------");
+                _timer = 0;
+                ChangeRandomDirection();
+                OnAttack();
+            }
         }
         void TrackMode()
         {
@@ -62,26 +78,23 @@ namespace MFFrameWork
         }
         void AttackMode()
         {
-            var toTarget = new Vector2(_targetObj.position.x - transform.position.x, _targetObj.position.z - transform.position.z);
-            Vector2 finalDirection = (_randomDirection * 0.5f).normalized;
-            var n = toTarget * finalDirection;
-            
+            Vector3 toTarget = Vector3.zero;
+            if (_targetObj)
+                toTarget = _targetObj.position - transform.position;
+            toTarget.y = 0;
 
-            OnMove(n);
+            var moveVec = _randomDirection;
 
-            _timer += Time.deltaTime;
+            moveVec.z = toTarget.magnitude - _targetDistans * 0.1f;
+            var moveDic = Quaternion.LookRotation(toTarget) * moveVec ;
 
-            if (TargetTransform && _timer > 1.2f)
-            {
-                _timer = 0;
-                ChangeRandomDirection();
-                OnAttack();
-            }
+            OnMove(new Vector2(moveDic.x, moveDic.z));
+
         }
         void ChangeRandomDirection()
         {
             // ランダムな方向を設定 (-1〜1の範囲)
-            _randomDirection = new Vector2(Random.Range(-1f, 1f), Random.Range(-1f, 1f)).normalized;
+            _randomDirection = new Vector3(Random.Range(_randomLeftMove * -1, _randomLeftMove), 0, 0).normalized;
         }
     }
     enum EnemyState
