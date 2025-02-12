@@ -39,7 +39,7 @@ namespace MFFrameWork.Utilities
                 }
                 action?.Invoke();
             }
-            catch { Debug.Log("Cancel"); }
+            catch { }
         }
         public async static Task PausableDestroy(GameObject gameObject, float waitSeconds)
         {

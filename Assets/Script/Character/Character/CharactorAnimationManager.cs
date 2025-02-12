@@ -9,7 +9,7 @@ namespace MFFrameWork
         {
             {AnimationKind.Move, "Move" },
             {AnimationKind.Jump, "Jump" },
-            {AnimationKind.Attack, "Attack" }
+            {AnimationKind.SubAttack, "MeleeAttack0" }
         };
         static readonly Dictionary<AnimationPropertys, string> PropertysName = new Dictionary<AnimationPropertys, string>()
         {
@@ -17,7 +17,7 @@ namespace MFFrameWork
             {AnimationPropertys.MoveX, "MoveX" },
             {AnimationPropertys.MoveY, "MoveY" },
             {AnimationPropertys.IsGround, "IsGround" },
-            {AnimationPropertys.AttackTrigger,"AttackTrigger" },
+            {AnimationPropertys.AttackTrigger,"Attack" },
             {AnimationPropertys.DamageTrigger,"DamageTrigger" },
             {AnimationPropertys.JumpTrigger,"JumpTrigger" },
             {AnimationPropertys.DushTrigger,"DushTrigger" },
@@ -25,6 +25,10 @@ namespace MFFrameWork
         };
 
         Animator _animator;
+        public Animator Animator
+        {
+            get { return _animator; }
+        }
         public void SetAnimator(Animator animator) => _animator = animator;
 
         /// <summary>
@@ -33,14 +37,14 @@ namespace MFFrameWork
         /// <param name="kind"></param>
         /// <param name="changeMod"></param>
         /// <param name="duration">アニメーションの遷移時間。ChangeModeがCrossFadeの時のみ使用される</param>
-        public void AnimationChange(AnimationKind kind, ChangeAnimation changeMod, float duration = 1)
+        public void AnimationChange(AnimationKind kind, ChangeAnimMode changeMod = default, float duration = 1)
         {
             switch (changeMod)
             {
-                case ChangeAnimation.Defalt:
+                case ChangeAnimMode.Defalt:
                     _animator.Play(ClipName[kind]);
                     break;
-                case ChangeAnimation.CrossFade:
+                case ChangeAnimMode.CrossFade:
                     _animator.CrossFade(ClipName[kind], duration);
                     break;
             }
@@ -58,7 +62,7 @@ namespace MFFrameWork
             _animator.SetBool(PropertysName[kind], frag);
         }
     }
-    public enum ChangeAnimation
+    public enum ChangeAnimMode
     {
         Defalt,
         CrossFade
@@ -67,7 +71,7 @@ namespace MFFrameWork
     {
         Move,
         Jump,
-        Attack
+        SubAttack
     }
     public enum AnimationPropertys
     {

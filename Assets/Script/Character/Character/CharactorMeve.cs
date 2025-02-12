@@ -53,10 +53,6 @@ namespace MFFrameWork
                     _isGround = value;
                     OnGroundChanged?.Invoke(_isGround);
                     Debug.Log("isGround:" + _isGround);
-                    if (_isGround && _rb.linearVelocity.y < _landingPower)
-                    {
-                        UncontrollableSeconds(_landingDelayTime);
-                    }
                 }
             }
         }
@@ -75,16 +71,18 @@ namespace MFFrameWork
             }
         }
 
-
+        private void Awake()
+        {
+            if (_useCamera)
+            {
+                _toRotate = Camera.main.transform;
+            }
+        }
 
         private void Start()
         {
             _rb = GetComponent<Rigidbody>();
             _capsuleCollider = GetComponent<CapsuleCollider>();
-            if (_useCamera)
-            {
-                _toRotate = Camera.main.transform;
-            }
         }
 
         void ICharacterMove.Init() { }
@@ -137,13 +135,11 @@ namespace MFFrameWork
         {
             _lookPos = lookPos - transform.position;
             _attackLookTimer = time;
-            _isDisableMove = true;
         }
 
         void IMove.Move(Vector3 moveDirection, Action<Vector2> action)//ToDo:HERE　RaycastをSphereChastに変更したい 解決
         {
             Debug.DrawRay(transform.position, moveDirection, Color.green);
-            if (!_isDisableMove) return;
             if (_useCamera)
             {
                 var rotation = Quaternion.Euler(0, _toRotate.eulerAngles.y, 0);
@@ -168,8 +164,7 @@ namespace MFFrameWork
         }
         void IJump.Jump(Action action)
         {
-            if (!_isDisableMove) return;
-            else if (_jumpCount != 0)
+            if (_jumpCount != 0)
             {
                 _jumpCount--;
                 _rb.linearVelocity = Vector3.Scale(_rb.linearVelocity, new Vector3(1, 0, 1));
@@ -183,7 +178,7 @@ namespace MFFrameWork
         }
         async void IDush.Dush(Vector3 moveDirection, Action animationAction, Action end)
         {
-            if (!_isDisableMove || moveDirection.sqrMagnitude == 0) return;
+            if (moveDirection.sqrMagnitude == 0) return;
 
             if (_useCamera)
             {
@@ -195,8 +190,8 @@ namespace MFFrameWork
             _rb.AddForce(moveDirection.normalized * DushSpeed, ForceMode.Impulse);
 
             animationAction?.Invoke();
-
-            UncontrollableSeconds(_dushCoolTime, end);
+            await Pausable.PausableWaitForSeconds(.3f);
+            end?.Invoke();
         }
         /// <summary>
         /// worldの-y方向にrayを飛ばす。
@@ -223,18 +218,5 @@ namespace MFFrameWork
         }
 
 
-        /// <summary>
-        /// クールタイム分操作不能にする
-        /// </summary>
-        /// <param name="seconds"></param>
-        public async Task UncontrollableSeconds(float seconds, Action end = null)
-        {
-            Debug.Log("Uncontrolle");
-            _isDisableMove = false;
-            await Pausable.PausableWaitForSeconds(seconds, _destoryTokenSouce.Token);
-            _isDisableMove = true;
-            end?.Invoke();
-            Debug.Log("controlle");
-        }
     }
 }

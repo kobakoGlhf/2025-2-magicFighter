@@ -12,4 +12,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d04b1d54701ba8b4a8762ba0be0fd1f5, type: 3}
   m_Name: SEData
   m_EditorClassIdentifier: 
-  _audioData: []
+  _audioData:
+  - _clip: {fileID: 8300000, guid: d61b203784126b94584735d710009929, type: 3}
+    _volume: 0.7
+  - _clip: {fileID: 8300000, guid: 697958c3d77d3384f9e25128c8d171b3, type: 3}
+    _volume: 0.7
+  - _clip: {fileID: 8300000, guid: fab83e50830b5aa45a943bf2e043b0f7, type: 3}
+    _volume: 0.7
+  - _clip: {fileID: 8300000, guid: 697958c3d77d3384f9e25128c8d171b3, type: 3}
+    _volume: 0.7
+  - _clip: {fileID: 8300000, guid: 50a8fad0f6ca5314f98a6255e9c7604a, type: 3}
+    _volume: 0.7

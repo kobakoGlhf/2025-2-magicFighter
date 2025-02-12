@@ -27,7 +27,7 @@ namespace MFFrameWork
                 _player.TargetTransform = _enemy.transform;
 
             }
-            else
+            else if(_player)
             {
                 _player.TargetTransform = null;
             }

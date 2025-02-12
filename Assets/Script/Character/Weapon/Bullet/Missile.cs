@@ -34,7 +34,7 @@ namespace MFFrameWork
         {
             _target = target;
             _initialVelocity = initVelocity;
-            _period = hitTime + Random.Range(-1, 1f);
+            _period = hitTime + Random.Range(-.3f, .3f);
             _maxAccleration = maxAcceleration;
             _position = transform.position;
         }

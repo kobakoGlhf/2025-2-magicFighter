@@ -14,10 +14,11 @@ namespace MFFrameWork
 
         [SerializeField] int _missileCount;
 
-        [SerializeField] float _nullTargetRange=80;
+        [SerializeField] float _nullTargetRange = 80;
+
 
         Vector3 _targetPos;
-        private void Start()
+        protected override void Start_S()
         {
             if (!_bulletObj.TryGetComponent(out IMissile bullet))
             {

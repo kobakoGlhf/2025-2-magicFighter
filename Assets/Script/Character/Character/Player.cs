@@ -1,6 +1,7 @@
 using MFFrameWork.Utilities;
 using System;
 using System.Threading;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -18,7 +19,7 @@ namespace MFFrameWork
             _playerInput.actions["Move"].canceled += x => CancelMove();
             _playerInput.actions["Jump"].started += x => OnJump();
             _playerInput.actions["Dush"].started += x => OnDush();
-            _playerInput.actions["MainAttack"].started += x => OnAttack();
+            _playerInput.actions["MainAttack"].performed += x => OnAttack();
             _playerInput.actions["SubAttack"].started += x => OnSubAttack();
             _playerInput.actions["SkillAttack"].started += x => OnSkillAttack();
             _playerInput.actions["LookOn"].started += x => OnLookTarget();
@@ -29,7 +30,7 @@ namespace MFFrameWork
             _playerInput.actions["Move"].canceled -= x => CancelMove();
             _playerInput.actions["Jump"].started -= x => OnJump();
             _playerInput.actions["Dush"].started -= x => OnDush();
-            _playerInput.actions["MainAttack"].started -= x => OnAttack();
+            _playerInput.actions["MainAttack"].performed -= x => OnAttack();
             _playerInput.actions["SubAttack"].started -= x => OnSubAttack();
             _playerInput.actions["SkillAttack"].started -= x => OnSkillAttack();
             _playerInput.actions["LookOn"].started -= x => OnLookTarget();
@@ -42,7 +43,7 @@ namespace MFFrameWork
         [SerializeField] protected ICharacterMove _characterMove;
         [SerializeField] protected Transform _originTransform;
         [SerializeField] Weapon_B _mainAttack;
-        [SerializeField] Weapon_B _subAttack;
+        [SerializeField] MeleeWeapon _subAttack;
         [SerializeField] Weapon_B _skillAttack;
         protected CharacterAnimation _charactorAnimation = new();
         protected Rigidbody _rb;
@@ -59,8 +60,19 @@ namespace MFFrameWork
         [SerializeField] float _currentStamina;
         [SerializeField] float _dushStamina = 60;
         [SerializeField, Tooltip("1秒ごとに*50回復(fixed)")] float _staminaRegeneration = 1;
-        bool _isStaminaRegene = true;
+        [SerializeField] bool _isStaminaRegene = true;
 
+
+        [SerializeField]
+        float _dushCoolTime = .5f;
+
+        bool _isDisableMove;
+        bool _isDisableInput;
+
+        [SerializeField] float _hitTime;
+
+        Task _disMoveTask;
+        Task _disInputTask;
 
         public Action<float, float> OnChangeHealth;
         public Action<Transform> OnChangeTarget;
@@ -89,7 +101,6 @@ namespace MFFrameWork
         {
             get => _currentHealth; set
             {
-                Debug.Log($"HP:{_currentHealth}");
                 if (_currentHealth != value)
                 {
                     _currentHealth = value;
@@ -129,7 +140,13 @@ namespace MFFrameWork
 
             if (_mainAttack) _mainAttack.OnAttacked += _characterMove.OnAttacked;
             if (_skillAttack) _skillAttack.OnAttacked += _characterMove.OnAttacked;
-            if (_subAttack) _subAttack.OnAttacked += _characterMove.OnAttacked;
+            if (_subAttack)
+            {
+                _subAttack.OnAttacked += _characterMove.OnAttacked;
+                _subAttack.OnMeleeAttackEnd += () => _isDisableMove = false;
+                _subAttack.OnMeleeAttackEnd += () => _attackCancelToken = new();
+                _subAttack._animation = _charactorAnimation;
+            }
 
             _characterMove.Init();
             Start_S();
@@ -138,15 +155,17 @@ namespace MFFrameWork
 
         void FixedUpdate()
         {
+            Debug.Log(_attackCancelToken);
+            _charactorAnimation.SetFloat(
+                AnimationPropertys.MoveSpeed,
+                Vector3.Scale(_characterMove.Velocity, new Vector3(1, 0, 1)).magnitude);
+
+            if (_isDisableMove || _isDisableInput) return;
             _characterMove?.Move(_moveDirection, vector =>
             {
                 _charactorAnimation.SetFloat(AnimationPropertys.MoveX, _moveDirection.x);
                 _charactorAnimation.SetFloat(AnimationPropertys.MoveY, _moveDirection.z);
             });
-            _charactorAnimation.SetFloat(
-                AnimationPropertys.MoveSpeed,
-                Vector3.Scale(_characterMove.Velocity, new Vector3(1, 0, 1)).magnitude);
-
             if (_status.Stamina >= _currentStamina && _isStaminaRegene)
                 CurrentStamina += _staminaRegeneration;
 
@@ -154,6 +173,8 @@ namespace MFFrameWork
         }
         public virtual void Fixed_S() { }
         int IDamageable.HitPoint { get => CurrentHealth; }
+
+
         void IDamageable.Damage(float damage, Transform hitObjTransform)
         {
             if (CurrentHealth <= 0)
@@ -164,7 +185,10 @@ namespace MFFrameWork
             else
             {
                 CurrentHealth -= (int)damage;
+                _charactorAnimation.SetTrigger(AnimationPropertys.DamageTrigger);
             }
+            if (damage > 5)
+                _disInputTask = UncontrollableSeconds(_hitTime);
         }
 
         void IDamageable.HealthHeel(float heel)//ToDo:HERE 回復が上限を突破しないように
@@ -193,34 +217,49 @@ namespace MFFrameWork
         protected void OnJump()
         {
             if ((_characterMove is null).ChackLog("jump is null")) return;
+            else if (_isDisableMove || _isDisableInput) return;
             _characterMove.Jump(() => _charactorAnimation.SetTrigger(AnimationPropertys.JumpTrigger));
         }
         protected void OnDush()
         {
             if ((_characterMove is null).ChackLog("dush is null")) return;
-            else if (CurrentStamina > _dushStamina)
+            else if (_isDisableInput) return;
+            else if (CurrentStamina > _dushStamina && _moveDirection.sqrMagnitude != 0)
             {
+                _attackCancelToken.Cancel();
+                _attackCancelToken.Dispose();
+
                 _isStaminaRegene = false;
                 _characterMove.Dush(_moveDirection, () => _charactorAnimation.SetTrigger(AnimationPropertys.DushTrigger),
-                    () => _isStaminaRegene = true);
+                    () =>
+                    {
+                        _isStaminaRegene = true;
+                    });
                 CurrentStamina -= _dushStamina;
+
+                _disInputTask = UncontrollableSeconds(_dushCoolTime);
+                _disMoveTask = UnMovebleSeconds(_dushCoolTime);
             }
         }
-        protected void OnAttack()
+        protected void OnAttack()//ToDo:HERE ここのアタック関係まとめる
         {
-            if ((_mainAttack is null).ChackLog("Attack is null")) return;
+            if ((_mainAttack is null).ChackLog("Attack is null") || _isDisableInput) return;
+            else if (_isDisableMove) return;
             _mainAttack.OnAttack(_targetTransform, AttackPower, _attackCancelToken.Token);
         }
 
         protected void OnSubAttack()
         {
-            if ((_subAttack is null).ChackLog("Attack is null")) return;
-            _subAttack.OnAttack(_targetTransform, AttackPower, _attackCancelToken.Token);
+            if ((_subAttack is null).ChackLog("Attack is null") || _isDisableInput) return;
+            else if (_isDisableMove) return;
+            Debug.Log("Attack1");
+            _subAttack.OnAttack(_targetTransform, AttackPower, _attackCancelToken.Token, () => _isDisableMove = true);
         }
 
         protected void OnSkillAttack()
         {
-            if ((_skillAttack is null).ChackLog("Attack is null")) return;
+            if ((_skillAttack is null).ChackLog("Attack is null") || _isDisableInput) return;
+            else if (_isDisableMove) return;
             _skillAttack.OnAttack(_targetTransform, AttackPower, _attackCancelToken.Token);
         }
 
@@ -246,7 +285,24 @@ namespace MFFrameWork
             _charactorAnimation.SetBool(AnimationPropertys.IsLookMode, false);
         }
         #endregion
-
+        /// <summary>
+        /// クールタイム分操作不能にする
+        /// </summary>
+        /// <param name="seconds"></param>
+        public async Task UncontrollableSeconds(float seconds, Action end = null)
+        {
+            _isDisableInput = true;
+            await Pausable.PausableWaitForSeconds(seconds);
+            _isDisableInput = false;
+            end?.Invoke();
+        }
+        public async Task UnMovebleSeconds(float seconds, Action end = null)
+        {
+            _isDisableMove = true;
+            await Pausable.PausableWaitForSeconds(seconds);
+            _isDisableMove = false;
+            end?.Invoke();
+        }
     }
     [Serializable]
     public struct Status
@@ -293,7 +349,7 @@ namespace MFFrameWork
     }
     public interface IAttack
     {
-        void OnAttack(Transform target, float attackPower, CancellationToken token = default);
+        void OnAttack(Transform target, float attackPower, CancellationToken token = default, Action action = default);
     }
     public interface IDamageable
     {

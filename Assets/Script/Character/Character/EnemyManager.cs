@@ -19,7 +19,8 @@ namespace MFFrameWork
 
         [SerializeField, Tooltip("Enemyはこの距離を保とうとします。")] float _targetDistans;
 
-        float _timer;
+        float _mainAtkTimer;
+        float _skillAtkTimer;
         Vector3 _randomDirection;
         public override void Start_S()
         {
@@ -27,7 +28,7 @@ namespace MFFrameWork
             TargetTransform = _targetObj;
             _characterMove.LockTarget = _targetObj;
             OnLookTarget();
-            _characterMove.MoveSpeed *= 0.5f;
+            _characterMove.MoveSpeed *= 0.8f;
             ChangeRandomDirection(); 
             OnMove(new Vector2(_randomDirection.x,_randomDirection.z));
         }
@@ -35,12 +36,17 @@ namespace MFFrameWork
         {
             AttackMode();
 
-            if (_timer + 1.2f < Time.time)
+            if (_mainAtkTimer + 1.2f < Time.time)
             {
                 Debug.Log("------");
-                _timer = Time.time;
+                _mainAtkTimer = Time.time;
                 ChangeRandomDirection();
                 OnAttack();
+            }
+            if (_skillAtkTimer + 4 < Time.time)
+            {
+                _skillAtkTimer = Time.time;
+                OnSkillAttack();
             }
 
 
