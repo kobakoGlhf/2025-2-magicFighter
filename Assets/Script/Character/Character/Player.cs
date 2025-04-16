@@ -144,7 +144,6 @@ namespace MFFrameWork
             {
                 _subAttack.OnAttacked += _characterMove.OnAttacked;
                 _subAttack.OnMeleeAttackEnd += () => _isDisableMove = false;
-                _subAttack.OnMeleeAttackEnd += () => _attackCancelToken = new();
                 _subAttack._animation = _charactorAnimation;
             }
 
@@ -228,6 +227,7 @@ namespace MFFrameWork
             {
                 _attackCancelToken.Cancel();
                 _attackCancelToken.Dispose();
+                _attackCancelToken = new();
 
                 _isStaminaRegene = false;
                 _characterMove.Dush(_moveDirection, () => _charactorAnimation.SetTrigger(AnimationPropertys.DushTrigger),
