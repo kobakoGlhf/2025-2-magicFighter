@@ -67,7 +67,6 @@ namespace MFFrameWork
                     {
                         Debug.LogWarning(target.name);
                         break;
-                        Debug.LogWarning("Attack1");
 
                     }
                     _rb.linearVelocity = (targetPos - transform.position).normalized * _speed;
